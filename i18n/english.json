@@ -1,0 +1,7 @@
+{
+  "index": {
+    "greeting": "Welcome to Book Nest",
+    "description": "これは日本語のページです。",
+    "about":"このページにたどり着いたということは、まだあなたは本を登録していませんね。"
+  }
+}
