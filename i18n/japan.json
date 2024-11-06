@@ -3,5 +3,10 @@
     "greeting": "Book Nestへようこそ",
     "description": "ローカルの本の管理システム。",
     "about":"このページにたどり着いたということは、まだあなたは本を登録していませんね。"
+  },
+  "DisplayOptions":{
+    "All":"全て表示",
+    "Author":"著者ごと",
+    "Series":"シリーズごと"
   }
 }
