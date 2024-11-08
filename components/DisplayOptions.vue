@@ -1,17 +1,17 @@
 <template>
     <div class="flex  flex-col " role="group">
       <button
-        v-for="option in options"
-        :key="option.value"
+        v-for="{value,label} in options"
+        :key="value"
         type="button"
         class="px-4 py-2 text-sm font-medium border"
         :class="{
-          'bg-white text-gray-700 hover:bg-gray-50': modelValue !== option.value,
-          'bg-indigo-600 text-white': modelValue === option.value
+          'bg-white text-gray-700 hover:bg-gray-50': modelValue !== value,
+          'bg-indigo-600 text-white': modelValue === value
         }"
-        @click="$emit('update:modelValue', option.value)"
+        @click="$emit('update:modelValue', value)"
       >
-        {{ option.label }}
+        {{ label }}
       </button>
     </div>
   </template>

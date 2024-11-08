@@ -1,12 +1,26 @@
 {
-  "index": {
-    "greeting": "Book Nestへようこそ",
-    "description": "ローカルの本の管理システム。",
-    "about":"このページにたどり着いたということは、まだあなたは本を登録していませんね。"
+  "DisplayOptions": {
+    "All": "全て表示",
+    "Author": "著者ごと",
+    "Series": "シリーズごと"
   },
-  "DisplayOptions":{
-    "All":"全て表示",
-    "Author":"著者ごと",
-    "Series":"シリーズごと"
+  "BookFilter": {
+    "ReadStatuslabel": "読書状況",
+    "BookTypelabel": "書籍タイプ",
+    "Searchlabel": "検索",
+    "ReadStatus": {
+      "All": "すべて",
+      "Read": "読了",
+      "Reading": "読書中",
+      "Unread": "未読"
+    },
+    "BookType": {
+      "All": "全て",
+      "GeneralBooks": "一般書籍",
+      "Manga": "マンガ",
+      "LightNovel": "ライトノベル",
+      "Other": "その他"
+    },
+    "SearchPlaceholder": "タイトル、著者、シリーズ名で検索"
   }
 }
