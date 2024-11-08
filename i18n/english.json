@@ -3,5 +3,29 @@
     "greeting": "Welcome to Book Nest",
     "description": "これは日本語のページです。",
     "about":"このページにたどり着いたということは、まだあなたは本を登録していませんね。"
+  },
+  "DisplayOptions": {
+    "All": "Show All",
+    "Author": "By Author",
+    "Series": "By Series"
+  },
+  "BookFilter": {
+    "ReadStatuslabel": "Read Status",
+    "BookTypelabel": "Book Type",
+    "Searchlabel": "Search",
+    "ReadStatus": {
+      "All": "All",
+      "Read": "Read",
+      "Reading": "Reading",
+      "Unread": "Unread"
+    },
+    "BookType": {
+      "All": "All",
+      "GeneralBooks": "General Books",
+      "Manga": "Manga",
+      "LightNovel": "Light Novel",
+      "Other": "Other"
+    },
+    "SearchPlaceholder": "Search by title, author, series"
   }
 }
