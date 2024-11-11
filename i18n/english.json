@@ -10,17 +10,17 @@
     "Searchlabel": "Search",
     "ReadStatus": {
       "All": "All",
-      "Read": "Read",
+      "Completed": "Completed",
       "Reading": "Reading",
       "Unread": "Unread"
     },
     "BookType": {
       "All": "All",
-      "GeneralBooks": "General Books",
+      "General": "General",
       "Manga": "Manga",
       "LightNovel": "Light Novel",
       "Other": "Other"
     },
-    "SearchPlaceholder": "Search by title, author, series"
+    "SearchPlaceHolder": "Search by title, author, series"
   }
 }

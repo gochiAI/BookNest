@@ -10,17 +10,17 @@
     "Searchlabel": "検索",
     "ReadStatus": {
       "All": "すべて",
-      "Read": "読了",
+      "Completed": "読了",
       "Reading": "読書中",
       "Unread": "未読"
     },
     "BookType": {
       "All": "全て",
-      "GeneralBooks": "一般書籍",
+      "General": "一般書籍",
       "Manga": "マンガ",
       "LightNovel": "ライトノベル",
       "Other": "その他"
     },
-    "SearchPlaceholder": "タイトル、著者、シリーズ名で検索"
+    "SearchPlaceHolder": "タイトル、著者、シリーズ名で検索"
   }
 }

@@ -19,52 +19,29 @@
 <script setup>
 import { useI18n } from 'vue-i18n';
 const { t } = useI18n();
+import { getBookTypeFilter } from '@/config/bookTypeFilter'
 
 const props = defineProps({
   readStatus: {
     type: String,
     required: true,
+    vallidator: (value) => ['all', 'completed', 'reading', 'unread'].includes(value),
+    default: 'all'
   },
   bookType: {
     type: String,
     required: true,
+    validator: (value) => ['all', '1', '2', '3', '4'].includes(value),
+    default: 'all'
   },
   search: {
     type: String,
-    required: true
+    required: true,
+    validator: (value) => value.length <= 100,
+    default: ''
   }
 })
 
 defineEmits(['update:readStatus', 'update:bookType', 'update:search'])
-const filters = [
-  {
-    id: 'readStatus',
-    label: t('BookFilter.ReadStatuslabel'),
-    type: 'select',
-    options: [
-      { value: 'all', label: t('BookFilter.ReadStatus.All') },
-      { value: 'read', label: t('BookFilter.ReadStatus.Read') },
-      { value: 'reading', label: t('BookFilter.ReadStatus.Reading') },
-      { value: 'unread', label: t('BookFilter.ReadStatus.Unread') }
-    ]
-  },
-  {
-    id: 'bookType',
-    label: t('BookFilter.BookTypelabel'),
-    type: 'select',
-    options: [
-      { value: 'all', label: t('BookFilter.BookType.All') },
-      { value: '1', label: t('BookFilter.BookType.GeneralBooks') },
-      { value: '2', label: t('BookFilter.BookType.Manga') },
-      { value: '3', label: t('BookFilter.BookType.LightNovel') },
-      { value: '4', label: t('BookFilter.BookType.Other') }
-    ]
-  },
-  {
-    id: 'search',
-    label: t('BookFilter.Searchlabel'),
-    type: 'text',
-    placeholder: t('BookFilter.SearchPlaceholder')
-  }
-]
+const filters = getBookTypeFilter(t)
 </script>
