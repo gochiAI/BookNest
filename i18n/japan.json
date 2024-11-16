@@ -5,9 +5,9 @@
     "Series": "シリーズごと"
   },
   "BookFilter": {
-    "ReadStatuslabel": "読書状況",
-    "BookTypelabel": "書籍タイプ",
-    "Searchlabel": "検索",
+    "readStatusLabel": "読書状況",
+    "bookTypeLabel": "書籍タイプ",
+    "searchLabel": "検索",
     "ReadStatus": {
       "All": "すべて",
       "Completed": "読了",
@@ -21,6 +21,6 @@
       "LightNovel": "ライトノベル",
       "Other": "その他"
     },
-    "SearchPlaceHolder": "タイトル、著者、シリーズ名で検索"
+    "searchPlaceHolder": "タイトル、著者、シリーズ名で検索"
   }
 }

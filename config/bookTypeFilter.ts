@@ -1,10 +1,11 @@
+
 import { type Filter } from "@/interfaces/filters";
 import { BOOK_TYPES } from "@/constants/bookTypes";
 
-export const getBookTypeFilter = (t: any): Filter[] => [
+export const getBookTypeFilter = (t:(key:string)=>string): Filter[] => [
   {
     id: "readStatus",
-    label: t("BookFilter.ReadStatuslabel"),
+    label: t("BookFilter.readStatusLabel"),
     type: "select",
     options: [
       { value: "all", label: t("BookFilter.ReadStatus.All") },
@@ -15,7 +16,7 @@ export const getBookTypeFilter = (t: any): Filter[] => [
   },
   {
     id: "bookType",
-    label: t("BookFilter.BookTypelabel"),
+    label: t("BookFilter.bookTypeLabel"),
     type: "select",
     options: [
       { value: BOOK_TYPES.ALL, label: t("BookFilter.BookType.All") },
@@ -30,8 +31,8 @@ export const getBookTypeFilter = (t: any): Filter[] => [
   },
   {
     id: "search",
-    label: t("BookFilter.Searchlabel"),
+    label: t("BookFilter.searchLabel"),
     type: "text",
-    placeholder: t("BookFilter.SearchPlaceHolder"),
+    placeholder: t("BookFilter.searchPlaceHolder"),
   },
 ];

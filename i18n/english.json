@@ -5,9 +5,9 @@
     "Series": "By Series"
   },
   "BookFilter": {
-    "ReadStatuslabel": "Read Status",
-    "BookTypelabel": "Book Type",
-    "Searchlabel": "Search",
+    "readStatusLabel": "Read Status",
+    "bookTypeLabel": "Book Type",
+    "searchLabel": "Search",
     "ReadStatus": {
       "All": "All",
       "Completed": "Completed",
@@ -21,6 +21,6 @@
       "LightNovel": "Light Novel",
       "Other": "Other"
     },
-    "SearchPlaceHolder": "Search by title, author, series"
+    "searchPlaceHolder": "Search by title, author, series"
   }
 }
