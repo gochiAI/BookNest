@@ -1,0 +1,26 @@
+{
+  "DisplayOptions": {
+    "All": "全て表示",
+    "Author": "著者ごと",
+    "Series": "シリーズごと"
+  },
+  "BookFilter": {
+    "readStatusLabel": "読書状況",
+    "bookTypeLabel": "書籍タイプ",
+    "searchLabel": "検索",
+    "ReadStatus": {
+      "All": "すべて",
+      "Completed": "読了",
+      "Reading": "読書中",
+      "Unread": "未読"
+    },
+    "BookType": {
+      "All": "全て",
+      "General": "一般書籍",
+      "Manga": "マンガ",
+      "LightNovel": "ライトノベル",
+      "Other": "その他"
+    },
+    "searchPlaceHolder": "タイトル、著者、シリーズ名で検索"
+  }
+}

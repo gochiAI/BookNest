@@ -1,0 +1,26 @@
+{
+  "DisplayOptions": {
+    "All": "Show All",
+    "Author": "By Author",
+    "Series": "By Series"
+  },
+  "BookFilter": {
+    "readStatusLabel": "Read Status",
+    "bookTypeLabel": "Book Type",
+    "searchLabel": "Search",
+    "ReadStatus": {
+      "All": "All",
+      "Completed": "Completed",
+      "Reading": "Reading",
+      "Unread": "Unread"
+    },
+    "BookType": {
+      "All": "All",
+      "General": "General",
+      "Manga": "Manga",
+      "LightNovel": "Light Novel",
+      "Other": "Other"
+    },
+    "searchPlaceHolder": "Search by title, author, series"
+  }
+}
