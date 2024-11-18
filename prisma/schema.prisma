@@ -14,22 +14,25 @@ datasource db {
 }
 
 model Book {
-  id           Int        @id @default(autoincrement())
+  id           Int       @id @default(autoincrement())
   title        String
+  releaseDate  DateTime?
+  cover        String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
   authorId     Int
-  author       Author     @relation(fields: [authorId], references: [id])
   publisherId  Int
-  publisher    Publisher  @relation(fields: [publisherId], references: [id])
   seriesId     Int?
-  series       Series?    @relation(fields: [seriesId], references: [id])
   volume       Int?
-  isbn         String?    @unique
+  isbn         String?   @unique
   bookTypeId   Int
-  bookType     BookType   @relation(fields: [bookTypeId], references: [id])
   readStatusId Int
-  readStatus   ReadStatus @relation(fields: [readStatusId], references: [id])
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
+
+  publisher Publisher @relation(fields: [publisherId], references: [id])
+  series    Series?   @relation(fields: [seriesId], references: [id])
+  author     Author     @relation(fields: [authorId], references: [id])
+  bookType   BookType   @relation(fields: [bookTypeId], references: [id])
+  readStatus ReadStatus @relation(fields: [readStatusId], references: [id])
 }
 
 model Author {
