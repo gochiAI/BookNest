@@ -8,6 +8,6 @@ image:
   file: .gitpod.Dockerfile
 
 tasks:
-  - init: 'echo "TODO: Replace with init/build command"'
-    command: 'echo "TODO: Replace with command to start project"'
+  - init: 'npm install'
+    command: 'npm run dev && npx prisma studio'
 
