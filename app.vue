@@ -4,29 +4,15 @@
 
     <div class="mb-6 flex flex-wrap items-center justify-between">
       <DisplayOptions v-model="displayOption" />
-      <BookFilter
-        v-model:readStatus="readStatus"
-        v-model:search="search"
-        v-model:bookType="bookType"
-      />
-      <button
-        @click="resetFilters"
-        class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded"
-      >
+      <BookFilter v-model:readStatus="readStatus" v-model:search="search" v-model:bookType="bookType" />
+      <button @click="resetFilters" class="bg-blue-200 hover:bg-gray-300 text-gray-800 font-bold py-2 p-4 my-4 rounded">
         Reset Filters
       </button>
     </div>
-    <ul>
-      <li v-for="book in books" :key="book.id">
-        <div class="bg-white shadow-md rounded p-4 mb-4">
-          <h2 class="text-xl font-bold">{{ book.title }}</h2>
-          <p class="text-gray-600">{{ book.author }}</p>
-          <p class="text-gray-600">{{ book.series }}</p>
-          <p class="text-gray-600">{{ book.type }}</p>
-          <p class="text-gray-600">{{ book.readStatus }}</p>
-        </div>
-      </li>
-    </ul>
+    <NuxtLayout>
+      <BookGrid v-if="thumbnailSize === 'grid'" :books="books" />
+      <BookList v-else :books="books" />
+    </NuxtLayout>
   </div>
 </template>
 
@@ -34,10 +20,12 @@
 import { ref, watch } from "vue";
 import DisplayOptions from "./components/DisplayOptions.vue";
 import BookFilter from "./components/BookFilter.vue";
+import BookGrid from "./layouts/BookGrid.vue";
+import BookList from "./layouts/BookList.vue";
 
 interface FilterState {
   displayOption: "all" | "author" | "series";
-  readStatus: "all" | "read" | "reading" | "unread";
+  readStatus: "all" | "completed" | "reading" | "unread";
   bookType: "all" | "generalbook" | "novel" | "manga" | "other";
   search: string;
 }
@@ -45,8 +33,23 @@ const displayOption = ref<FilterState["displayOption"]>("all");
 const readStatus = ref<FilterState["readStatus"]>("all");
 const bookType = ref<FilterState["bookType"]>("all");
 const search = ref<FilterState["search"]>("");
+const thumbnailSize = ref("list");
 
-const books = ref([]);
+interface Book {
+  id: number;
+  title: string;
+  releaseDate: string | null;
+  cover: string | null;
+  volume: number | null;
+  isbn: string | null;
+  author: { id: number; name: string };
+  publisher: { id: number; name: string };
+  series: { id: number; name: string } | null;
+  bookType: { id: number; name: string };
+  readStatus: { id: number; name: string };
+}
+
+const books = ref<Array<Book>>([]);
 
 const handleFilterChange = () => {
   const currentState = {
@@ -73,18 +76,14 @@ const resetFilters = () => {
 
 const fetchBooks = async () => {
   try {
-    const response = await useFetch("/api/books/", {
-      method: "GET",
-    });
-    console.log(response.data.value);
-
-    books.value = response.data.value;
+    const response = await fetch('/api/books')
+    books.value = await response.json()
   } catch (error) {
-    console.error(error);
+    console.error('Error fetching books:', error)
   } finally {
-    console.log("Fetching books completed");
+
   }
-};
+}
 
 onMounted(fetchBooks);
 </script>
