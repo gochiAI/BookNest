@@ -1,15 +1,18 @@
 <template>
-<button :class="statusClass(status)">{{status}}</button>
+<div class="btn btn-xs px-2 py-1 rounded-full text-xs font-medium" :class="statusClass(props.status)">
+    {{ props.status }}
+</div>
 </template>
 <script setup>
 const props = defineProps({
   status: {
     type: String,
     required: true,
+    validator: (value) => ['Completed', 'Reading', 'To Read'].includes(value)
   },
 });
 const statusClass = (status) => {
-    const baseClass = 'px-2 py-1 rounded-full text-xs font-medium'
+    const baseClass = ''
     switch (status) {
         case 'Completed':
             return `${baseClass} bg-green-100 text-green-800`
