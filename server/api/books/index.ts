@@ -1,7 +1,13 @@
 import { PrismaClient } from "@prisma/client";
 import { defineEventHandler, readBody } from "h3";
 
-const prisma = new PrismaClient();
+declare global {
+  var prisma: PrismaClient|undefined;
+}
+const prisma = global.prisma || new PrismaClient();
+if (process.env.NODE_ENV === "production") {
+  global.prisma = prisma;
+}
 
 export default defineEventHandler(async (event) => {
   const method = event.req.method;
