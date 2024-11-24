@@ -24,14 +24,6 @@
 
 <script setup>
 import statusClass from '~/components/readStatusIcon.vue'
-defineComponent({
-  props: {
-    books: {
-      type: Array,
-      required: true
-    }
-  }
-});
 defineProps({
   books: {
     type: Array,
@@ -41,7 +33,14 @@ defineProps({
 
 const formatDate = (dateString) => {
   if (!dateString) return 'N/A'
-  const options = { year: 'numeric', month: 'short', day: 'numeric' }
-  return new Date(dateString).toLocaleDateString(undefined, options)
+  try{
+    const date = new Date(dateString)
+    if (isNaN(date)) return 'N/A'
+    const options = { year: 'numeric', month: 'short', day: 'numeric' }
+    return date.toLocaleDateString('en-US', options)
+  }catch(e){
+    console.error(e)
+    return 'N/A'
+  }
 }
 </script>
