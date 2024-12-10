@@ -2,15 +2,17 @@
 CREATE TABLE `Book` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `title` VARCHAR(191) NOT NULL,
-    `authorId` INTEGER NOT NULL,
-    `publisherId` INTEGER NOT NULL,
-    `seriesId` INTEGER NULL,
+    `releaseDate` DATETIME(3) NULL,
+    `cover` VARCHAR(191) NULL,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updatedAt` DATETIME(3) NOT NULL,
+    `authorId` VARCHAR(191) NOT NULL,
+    `publisherId` VARCHAR(191) NOT NULL,
+    `seriesId` VARCHAR(191) NULL,
     `volume` INTEGER NULL,
     `isbn` VARCHAR(191) NULL,
     `bookTypeId` INTEGER NOT NULL,
     `readStatusId` INTEGER NOT NULL,
-    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-    `updatedAt` DATETIME(3) NOT NULL,
 
     UNIQUE INDEX `Book_isbn_key`(`isbn`),
     PRIMARY KEY (`id`)
@@ -18,41 +20,46 @@ CREATE TABLE `Book` (
 
 -- CreateTable
 CREATE TABLE `Author` (
-    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `id` VARCHAR(191) NOT NULL,
     `name` VARCHAR(191) NOT NULL,
 
+    UNIQUE INDEX `Author_name_key`(`name`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
 CREATE TABLE `Publisher` (
-    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `id` VARCHAR(191) NOT NULL,
     `name` VARCHAR(191) NOT NULL,
 
+    UNIQUE INDEX `Publisher_name_key`(`name`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
 CREATE TABLE `Series` (
-    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `id` VARCHAR(191) NOT NULL,
     `name` VARCHAR(191) NOT NULL,
 
+    UNIQUE INDEX `Series_name_key`(`name`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
 CREATE TABLE `BookType` (
-    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `id` INTEGER NOT NULL,
     `name` VARCHAR(191) NOT NULL,
 
+    UNIQUE INDEX `BookType_name_key`(`name`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
 CREATE TABLE `ReadStatus` (
-    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `id` INTEGER NOT NULL,
     `name` VARCHAR(191) NOT NULL,
 
+    UNIQUE INDEX `ReadStatus_name_key`(`name`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
