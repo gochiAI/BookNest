@@ -1,7 +1,7 @@
 <template>
   <div class="flex flex-wrap gap-4">
     <div class="flex-grow" v-for="filter in filters" :key="filter.id">
-      <label :for="filter.id" class="form-control w-full flex items-left block text-sm font-medium text-gray-700">
+      <label :for="filter.id" class="form-control w-full flex items-left text-sm font-medium text-gray-700">
         <div class="label"><span class="label-text">{{ filter.label }}</span></div>
         <select v-if="filter.type === 'select'" :id="filter.id" :value="$props[filter.id]"
           class="select select-bordered mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
@@ -24,7 +24,7 @@
 <script setup>
 import { useI18n } from 'vue-i18n';
 const { t } = useI18n();
-import { getBookTypeFilter } from '@/config/bookTypeFilter'
+import { getBookTypeFilter } from '@/config/TypeFilter'
 
 const props = defineProps({
   readStatus: {

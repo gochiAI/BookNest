@@ -8,7 +8,7 @@ const props = defineProps({
   status: {
     type: String,
     required: true,
-    validator: (value) => ['Completed', 'Reading', 'To Read'].includes(value)
+    validator: (value) => ['Completed', 'Reading', 'To Read','Unread'].includes(value)
   },
 });
 const statusClass = (status) => {
@@ -20,6 +20,8 @@ const statusClass = (status) => {
             return `${baseClass} bg-blue-100 text-blue-800`
         case 'To Read':
             return `${baseClass} bg-yellow-100 text-yellow-800`
+        case 'Unread':
+            return `${baseClass} bg-gray-100 text-gray-800`
         default:
             return `${baseClass} bg-gray-100 text-gray-800`
     }
