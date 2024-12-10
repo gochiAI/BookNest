@@ -1,6 +1,6 @@
-
+// フィルターの選択肢を定義
 import { type Filter } from "@/interfaces/filters";
-import { BOOK_TYPES } from "@/constants/bookTypes";
+import { BOOK_TYPES,STATUS_TYPES } from "@/constants/Types";
 
 export const getBookTypeFilter = (t:(key:string)=>string): Filter[] => [
   {
@@ -8,10 +8,10 @@ export const getBookTypeFilter = (t:(key:string)=>string): Filter[] => [
     label: t("BookFilter.readStatusLabel"),
     type: "select",
     options: [
-      { value: "all", label: t("BookFilter.ReadStatus.All") },
-      { value: "completed", label: t("BookFilter.ReadStatus.Completed") },
-      { value: "reading", label: t("BookFilter.ReadStatus.Reading") },
-      { value: "unread", label: t("BookFilter.ReadStatus.Unread") },
+      { value: STATUS_TYPES.ALL, label: t("BookFilter.ReadStatus.All") },
+      { value: STATUS_TYPES.COMPLETED, label: t("BookFilter.ReadStatus.Completed") },
+      { value: STATUS_TYPES.READING, label: t("BookFilter.ReadStatus.Reading") },
+      { value: STATUS_TYPES.UNREAD, label: t("BookFilter.ReadStatus.Unread") },
     ],
   },
   {

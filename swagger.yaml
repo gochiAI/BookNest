@@ -1,0 +1,307 @@
+openapi: 3.0.0
+info:
+  title: Book Search API
+  version: 1.0.0
+  description: API for searching books in local database and external APIs
+paths:
+  /index:
+    get:
+      summary: Get all books
+      description: Get all books in the local database
+      responses:
+        '200':
+          description: A list of all books
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                      description: Book ID
+                    title:
+                      type: string
+                      description: Title of the book
+                    releaseDate:
+                      type: string
+                      format: date-time
+                      description: Release date of the book
+                    cover:
+                      type: string
+                      description: Cover image URL of the book
+                    author:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          description: Author ID
+                        name:
+                          type: string
+                          description: Author name
+                    publisher:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          description: Publisher ID
+                        name:
+                          type: string
+                          description: Publisher name
+                    series:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          description: Series ID
+                        name:
+                          type: string
+                          description: Series name
+                    volume:
+                      type: integer
+                      description: Volume number of the book
+                    isbn:
+                      type: string
+                      description: ISBN of the book
+                    bookType:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          description: Book type ID
+                        name:
+                          type: string
+                          description: Book type name
+                    readStatus:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          description: Read status ID
+                        name:
+                          type: string
+                          description: Read status name
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: Error message
+    post:
+      summary: Create a new book
+      description: Create a new book in the local database
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  description: Title of the book
+                releaseDate:
+                  type: string
+                  format: date-time
+                  description: Release date of the book
+                cover:
+                  type: string
+                  description: Cover image URL of the book
+                authorName:
+                  type: string
+                  description: Name of the author
+                publisherName:
+                  type: string
+                  description: Name of the publisher
+                seriesName:
+                  type: string
+                  description: Name of the series
+                volume:
+                  type: integer
+                  description: Volume number of the book
+                isbn:
+                  type: string
+                  description: ISBN of the book
+                bookTypeId:
+                  type: integer
+                  description: Book type ID
+                readStatusId:
+                  type: integer
+                  description: Read status ID
+      responses:
+        '200':
+          description: The created book
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    description: Book ID
+                  title:
+                    type: string
+                    description: Title of the book
+                  releaseDate:
+                    type: string
+                    format: date-time
+                    description: Release date of the book
+                  cover:
+                    type: string
+                    description: Cover image URL of the book
+                  author:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        description: Author ID
+                      name:
+                        type: string
+                        description: Author name
+                  publisher:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        description: Publisher ID
+                      name:
+                        type: string
+                        description: Publisher name
+                  series:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        description: Series ID
+                      name:
+                        type: string
+                        description: Series name
+                  volume:
+                    type: integer
+                    description: Volume number of the book
+                  isbn:
+                    type: string
+                    description: ISBN of the book
+                  bookType:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        description: Book type ID
+                      name:
+                        type: string
+                        description: Book type name
+                  readStatus:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        description: Read status ID
+                      name:
+                        type: string
+                        description: Read status name
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: Error message
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: Error message
+  /search:
+    get:
+      summary: Search for books
+      description: Search for books by title in local database and external APIs
+      parameters:
+        - in: query
+          name: title
+          required: true
+          schema:
+            type: string
+          description: Title of the book to search for
+      responses:
+        '200':
+          description: A list of books
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  source:
+                    type: string
+                    description: Source of the books (local, ndl, hanmoto, amazon, none)
+                  books:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          description: Book ID
+                        title:
+                          type: string
+                          description: Title of the book
+                        author:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                              description: Author ID
+                            name:
+                              type: string
+                              description: Author name
+                        publisher:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                              description: Publisher ID
+                            name:
+                              type: string
+                              description: Publisher name
+                        series:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                              description: Series ID
+                            name:
+                              type: string
+                              description: Series name
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: Error message
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: Error message

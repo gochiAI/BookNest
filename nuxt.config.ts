@@ -2,6 +2,14 @@
 export default defineNuxtConfig({
   compatibilityDate: '2024-04-03',
   devtools: { enabled: true },
+  css: ['@/assets/css/topToast.css'],
+  plugins:[
+    {
+      src: "plugins/toast.client.js",
+      mode: "client",
+    },
+
+  ],
   modules: ['@nuxtjs/tailwindcss', '@nuxtjs/i18n','@vueuse/nuxt'],
   i18n: {
     locales: [

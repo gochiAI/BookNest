@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-col" role="group" aria-label="表示オプション">
+  <div class="menu  flex flex-col m-2" role="group" aria-label="表示オプション">
     <button
       v-for="{ value, label } in options"
       :key="value"
