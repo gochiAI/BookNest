@@ -2,15 +2,32 @@
 export default defineNuxtConfig({
   compatibilityDate: '2024-04-03',
   devtools: { enabled: true },
-  css: ['@/assets/css/topToast.css'],
+  css: [
+    '@/assets/css/topToast.css',
+    '~/assets/css/theme.css', // カスタムテーマスタイルを追加
+  ],
   plugins:[
     {
       src: "plugins/toast.client.js",
       mode: "client",
     },
+    {
+      src: "plugins/sw.client.js",
+      mode: "client",
+    },
+    {
+      src:"plugins/indexedDB.ts",
+      mode: "client"
+    }
 
   ],
-  modules: ['@nuxtjs/tailwindcss', '@nuxtjs/i18n','@vueuse/nuxt'],
+  modules: [
+    '@nuxtjs/tailwindcss',
+    '@nuxtjs/i18n',
+    '@vueuse/nuxt',
+    '@nuxt/icon',
+    '@nuxtjs/device',
+  ],
   i18n: {
     locales: [
       { code: 'en', iso: 'en-US', file: 'english.json' },
@@ -26,5 +43,13 @@ export default defineNuxtConfig({
       cookieKey: 'i18n_redirected',
       alwaysRedirect: true,
     },
+  },
+  icon: {
+    customCollections: [
+      {
+        prefix: 'my-icon',
+        dir: './assets/icons'
+      },
+    ],
   },
 })
