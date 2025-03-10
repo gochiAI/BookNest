@@ -1,5 +1,5 @@
 <template>
-  <div class="flex justify-start items-center w-[790px] relative gap-14">
+  <div class="flex justify-start items-center w-[75w] relative lg:gap-14">
     <PullDown id="readStatus" :label="t('BookFilter.readStatusLabel')" :options="[
       { value: 'all', label: t('BookFilter.ReadStatus.All') },
       { value: '1', label: t('BookFilter.ReadStatus.Completed') },
@@ -20,28 +20,24 @@
 
 <script setup>
 import { useI18n } from 'vue-i18n';
-const { t } = useI18n();
+import { defineProps, defineEmits } from 'vue';
 import PullDown from './Form/Pulldown.vue';
 import Inputbox from './Form/InputBox.vue';
+
+const { t } = useI18n();
 
 const props = defineProps({
   readStatus: {
     type: String,
-    required: true,
-    validator: (value) => ['all', '1', '2', '3'].includes(value),
-    default: 'all'
+    required: true
   },
   bookType: {
     type: String,
-    required: true,
-    validator: (value) => ['all', '1', '2', '3', '4'].includes(value),
-    default: 'all'
+    required: true
   },
   search: {
     type: String,
-    required: true,
-    validator: (value) => value.length <= 100,
-    default: ''
+    required: true
   }
 });
 

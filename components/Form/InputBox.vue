@@ -1,9 +1,9 @@
 <template>
-  <div class="px-[8px] py-[12px]">
-    <label :for="id">{{ label }}</label>
+  <div class="px-[8px] lg:py-[12px]">
+    <label class="hidden lg:block" :for="id">{{ label }}</label>
     <div class="py-[8px]">
       <input :type="type" :id="id" :name="name" :placeholder="placeholder" :maxlength="maxlength" v-model="inputValue"
-        class="w-[280px] h-[35px] rounded-[5px] border-solid border-2" />
+        class="input-box w-[280px] h-[35px] rounded-[5px] border-solid border-2" />
     </div>
   </div>
 </template>
@@ -46,3 +46,12 @@ export default {
   }
 };
 </script>
+
+<style scoped>
+
+@media (max-width: 559px) {
+  .input-box {
+    width: 100%;
+  }
+}
+</style>

@@ -57,7 +57,18 @@ export default {
       this.selectedLabel = option.label;
       this.isMenuOpen = false;
       this.$emit('input', option.value);
+    },
+    handleClickOutside(event) {
+      if (this.$refs.menu && !this.$refs.menu.contains(event.target)) {
+        this.isMenuOpen = false;
+      }
     }
+  },
+  mounted() {
+    document.addEventListener('click', this.handleClickOutside);
+  },
+  beforeDestroy() {
+    document.removeEventListener('click', this.handleClickOutside);
   }
 }
 </script>
