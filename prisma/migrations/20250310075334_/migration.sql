@@ -1,20 +1,18 @@
 -- CreateTable
 CREATE TABLE `Book` (
-    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `id` VARCHAR(191) NOT NULL,
     `title` VARCHAR(191) NOT NULL,
     `releaseDate` DATETIME(3) NULL,
     `cover` VARCHAR(191) NULL,
-    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-    `updatedAt` DATETIME(3) NOT NULL,
+    `volume` INTEGER NULL,
+    `isbn` VARCHAR(191) NULL,
     `authorId` VARCHAR(191) NOT NULL,
     `publisherId` VARCHAR(191) NOT NULL,
     `seriesId` VARCHAR(191) NULL,
-    `volume` INTEGER NULL,
-    `isbn` VARCHAR(191) NULL,
-    `bookTypeId` INTEGER NOT NULL,
-    `readStatusId` INTEGER NOT NULL,
+    `bookTypeId` VARCHAR(191) NOT NULL,
+    `readStatusId` VARCHAR(191) NOT NULL,
 
-    UNIQUE INDEX `Book_isbn_key`(`isbn`),
+    UNIQUE INDEX `Book_title_volume_key`(`title`, `volume`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -47,7 +45,7 @@ CREATE TABLE `Series` (
 
 -- CreateTable
 CREATE TABLE `BookType` (
-    `id` INTEGER NOT NULL,
+    `id` VARCHAR(191) NOT NULL,
     `name` VARCHAR(191) NOT NULL,
 
     UNIQUE INDEX `BookType_name_key`(`name`),
@@ -56,7 +54,7 @@ CREATE TABLE `BookType` (
 
 -- CreateTable
 CREATE TABLE `ReadStatus` (
-    `id` INTEGER NOT NULL,
+    `id` VARCHAR(191) NOT NULL,
     `name` VARCHAR(191) NOT NULL,
 
     UNIQUE INDEX `ReadStatus_name_key`(`name`),
