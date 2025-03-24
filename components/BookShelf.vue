@@ -1,68 +1,105 @@
 <template>
   <div>
+    <div id="header">
+      <Pulldown
+        id="readStatus"
+        :label="t('BookFilter.readStatusLabel')"
+        :options="readStatusOptions"
+        @input="updateFilter('readStatus', $event)"
+      />
+      <Pulldown
+        id="bookType"
+        :label="t('BookFilter.bookTypeLabel')"
+        :options="bookTypeOptions"
+        @input="updateFilter('bookType', $event)"
+      />
+      <Inputbox
+        id="search"
+        :label="t('BookFilter.searchLabel')"
+        :iconName="'my-icon:search'"
+        :placeholder="t('BookFilter.searchPlaceHolder')"
+        v-model="filters.search"
+      />
+    </div>
     <div v-if="displayOption === 'grid'" id="grid">
       <CardBook v-for="book in sortedBooks" :key="book.id" :book="book" />
     </div>
     <div v-else id="list">
       <ListBook v-for="book in sortedBooks" :key="book.id" :book="book" />
     </div>
+
+    <!-- ページネーション -->
+    <div class="pagination">
+      <button @click="prevPage" :disabled="currentPage === 1">Previous</button>
+      <span>Page {{ currentPage }}</span>
+      <button @click="nextPage" :disabled="books.length < itemsPerPage">Next</button>
+    </div>
   </div>
 </template>
 
 <script setup>
 import { ref, computed, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import CardBook from './CardBook.vue';
 import ListBook from './ListBook.vue';
+import Pulldown from './Form/Pulldown.vue';
+import Inputbox from './Form/InputBox.vue';
+import { getBookTypeOptions, getReadStatusOptions } from '../config/bookOptions';
 
-const props = defineProps({
-  readStatus: {
-    type: String,
-    required: true
-  },
-  bookType: {
-    type: String,
-    required: true
-  },
-  search: {
-    type: String,
-    required: true
-  },
-  displayOption: {
-    type: String,
-    required: true
-  }
-});
+const { t } = useI18n();
 
 const books = ref([]);
+const currentPage = ref(1); // 現在のページ番号
+const itemsPerPage = 15; // 1ページあたりのアイテム数
+
+const filters = ref({
+  readStatus: 'all',
+  bookType: 'all',
+  search: '',
+});
+
+const readStatusOptions = getReadStatusOptions(t);
+const bookTypeOptions = getBookTypeOptions(t);
+
+const updateFilter = (key, value) => {
+  filters.value[key] = value;
+  fetchBooks();
+};
 
 const fetchBooks = async () => {
   try {
-    const response = await $fetch('/api/books', {
-      params: {
-        readStatus: props.readStatus,
-        bookType: props.bookType,
-        search: props.search
-      }
-    });
-    books.value = response || [];
+    const params = {
+      ...filters.value,
+      page: currentPage.value,
+      itemsPerPage,
+    };
+
+    if (filters.value.readStatus === 'all') delete params.readStatus;
+    if (filters.value.bookType === 'all') delete params.bookType;
+
+    const response = await $fetch('/api/bookSearch', { params });
+    books.value = response.books || [];
   } catch (error) {
     console.error('Error fetching books:', error);
   }
 };
 
-watch([() => props.readStatus, () => props.bookType, () => props.search], fetchBooks, { immediate: true });
+// ページネーションの操作
+const nextPage = () => {
+  currentPage.value++;
+  fetchBooks();
+};
 
-const filteredBooks = computed(() => {
-  return books.value.filter(book => {
-    const matchesReadStatus = props.readStatus === 'all' || book.readStatus === props.readStatus;
-    const matchesBookType = props.bookType === 'all' || book.bookType === props.bookType;
-    const matchesSearch = book.title.toLowerCase().includes(props.search.toLowerCase());
-    return matchesReadStatus && matchesBookType && matchesSearch;
-  });
-});
+const prevPage = () => {
+  if (currentPage.value > 1) {
+    currentPage.value--;
+    fetchBooks();
+  }
+};
 
+// データのソート
 const sortedBooks = computed(() => {
-  return filteredBooks.value.slice().sort((a, b) => {
+  return books.value.slice().sort((a, b) => {
     if (a.title.toLowerCase() < b.title.toLowerCase()) return -1;
     if (a.title.toLowerCase() > b.title.toLowerCase()) return 1;
     if (a.volume < b.volume) return -1;
@@ -70,22 +107,74 @@ const sortedBooks = computed(() => {
     return 0;
   });
 });
+
+// 初期データの取得
+fetchBooks();
+
+// filters.search を監視して fetchBooks を呼び出す
+watch(
+  () => filters.value.search,
+  () => {
+    currentPage.value = 1; // 検索時にページ番号をリセット
+    fetchBooks();
+  }
+);
 </script>
 
 <style scoped>
+#header {
+  background-color: white;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-evenly;
+  align-items: center;
+  gap: 1rem;
+}
+
+@media (max-width: 1022px) {
+  #header {
+    flex-direction: column;
+    align-items: flex-start;
+    background-color: #D9D9D9;
+  }
+}
 #grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: 1rem;
 }
+
 #list {
   display: flex;
   flex-direction: column;
   gap: 1rem;
 }
+
 @media screen and (max-width: 768px) {
   #grid {
     grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
   }
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.pagination button {
+  padding: 0.5rem 1rem;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.pagination button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
 }
 </style>
