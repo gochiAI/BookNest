@@ -7,13 +7,20 @@ export default defineEventHandler(async (event) => {
 
   try {
     const body = await readBody(event);
-    const { id, ...updateData } = body;
+    console.log('Request Body:', body); // デバッグ用ログ
+    const bookId = Array.isArray(event.node.req.headers['x-book-id'])
+      ? event.node.req.headers['x-book-id'][0]
+      : event.node.req.headers['x-book-id'];
+    console.log('Book ID:', bookId); // デバッグ用ログ
 
-    // バリデーション
+    if (!bookId) {
+      throw new Error('Book ID is required');
+    }
+
     await validateBookData(body, storageType);
 
-    // 書籍を更新
-    const updatedBook = await storage.updateBook(id, updateData);
+    const updatedBook = await storage.updateBook(bookId, body);
+    console.log('Updated Book:', updatedBook); // デバッグ用ログ
     return updatedBook;
   } catch (error) {
     console.error('Error updating book:', error);

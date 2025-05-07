@@ -7,23 +7,12 @@ export default defineEventHandler(async (event) => {
 
   try {
     const body = await readBody(event);
+    console.log('Request Body:', body); // デバッグ用ログ
 
-    // ISBNのバリデーション（空白を許可）
-    const isbnRegex = /^\d{13}$/;
-    if (body.isbn && !isbnRegex.test(body.isbn)) {
-      throw new Error('ISBN must be a 13-digit number or empty.');
-    }
+    await validateBookData(body, storageType);
 
-    // 必須フィールドのバリデーション
-    if (!body.author || !body.author.name) {
-      throw new Error('Author name is required');
-    }
-    if (!body.publisher || !body.publisher.name) {
-      throw new Error('Publisher name is required');
-    }
-
-    // 書籍を作成
     const newBook = await storage.createBook(body);
+    console.log('Created Book:', newBook); // デバッグ用ログ
     return newBook;
   } catch (error) {
     console.error('Error creating book:', error);
