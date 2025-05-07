@@ -13,6 +13,7 @@ export default defineEventHandler(async (event) => {
   const readStatus = query.readStatus as string;
   const bookType = query.bookType as string;
   const search = query.search as string;
+  const sortOption = query.sortOption as string; // ソート条件を取得
 
   try {
     // ストレージ層で検索、フィルタリング、ページネーションを適用
@@ -22,6 +23,7 @@ export default defineEventHandler(async (event) => {
       readStatus,
       bookType,
       search,
+      sortOption, // ソート条件を渡す
     });
 
     // レスポンスを返す

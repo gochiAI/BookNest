@@ -1,5 +1,5 @@
 // storage/PrismaBookStorage.ts
-import { PrismaClient, type Book } from '@prisma/client';
+import { Prisma, PrismaClient,Book } from '@prisma/client';
 import type { BookStorage, GetBooksParams, GetBooksResult } from 'interfaces/BookStorage.js';
 
 const prisma = new PrismaClient();
@@ -12,9 +12,9 @@ export class PrismaBookStorage implements BookStorage {
       readStatus,
       bookType,
       search,
+      sortOption, // ソート条件を受け取る
     } = params;
 
-    // フィルタリング条件を構築
     const where: any = {};
     if (readStatus) {
       where.readStatus = readStatus;
@@ -23,13 +23,31 @@ export class PrismaBookStorage implements BookStorage {
       where.bookType = bookType;
     }
     if (search) {
-      where.title = { contains: search };
+      where.OR = [
+        { title: { contains: search} }, // タイトルで検索
+        { author: { name: { contains: search,} } }, // 著者名で検索
+        { publisher: { name: { contains: search,} } }, // 出版社名で検索
+        { series: { name: { contains: search,} } }, // シリーズ名で検索
+      ];
     }
 
-    // フィルタリング後の全件数を取得
     const totalItems = await prisma.book.count({ where });
 
-    // ページネーションを適用して書籍を取得
+    // ソート条件を動的に設定
+    const orderBy: any[] = [];
+    if (sortOption === 'title-asc') {
+      orderBy.push({ title: 'asc' });
+      orderBy.push({ volume: 'asc' });
+    } else if (sortOption === 'title-desc') {
+      orderBy.push({ title: 'desc' });
+      orderBy.push({ volume: 'desc' });
+    } else if (sortOption === 'date-asc') {
+      orderBy.push({ releaseDate: 'asc' });
+    } else if (sortOption === 'date-desc') {
+      orderBy.push({ releaseDate: 'desc' });
+    }
+    
+
     const books = await prisma.book.findMany({
       where,
       skip: (page - 1) * itemsPerPage,
@@ -39,10 +57,7 @@ export class PrismaBookStorage implements BookStorage {
         publisher: true,
         series: true,
       },
-      orderBy: [
-        { title: 'asc' },
-        { releaseDate: 'asc' },
-      ],
+      orderBy, // 動的なソート条件を適用
     });
 
     return { books, totalItems };
@@ -58,7 +73,7 @@ export class PrismaBookStorage implements BookStorage {
       },
     });
   }
-  async createBook(book: Partial<Book>): Promise<Book> {
+  async createBook(book: Book): Promise<Book> {
     try {
       return prisma.$transaction(async (tx) => {
         const author = await tx.author.upsert({
@@ -73,14 +88,11 @@ export class PrismaBookStorage implements BookStorage {
           create: { name: book.publisher.name }
         });
 
-        let series;
-        if (book.series) {
-          series = await tx.series.upsert({
-            where: { name: book.series.name },
-            update: {},
-            create: { name: book.series.name }
-          });
-        }
+        const series = await tx.series.upsert({
+          where: { name: book.series.name },
+          update: {},
+          create: { name: book.series.name }
+        });
 
         // releaseDateをDateオブジェクトに変換
         const releaseDate = book.releaseDate ? new Date(book.releaseDate) : null;
@@ -92,9 +104,17 @@ export class PrismaBookStorage implements BookStorage {
             coverUrl: book.coverUrl,
             volume: book.volume,
             isbn: book.isbn|| undefined,
-            authorId: author.id,
-            publisherId: publisher.id,
-            seriesId: series?.id,
+            author: {
+              connect: { id: author.id }, // リレーションを設定
+            },
+            publisher: {
+              connect: { id: publisher.id }, // リレーションを設定
+            },
+            series: series
+              ? {
+                  connect: { id: series.id }, // リレーションを設定
+                }
+              : undefined,
             bookType: book.bookType,
             readStatus: book.readStatus,
           },

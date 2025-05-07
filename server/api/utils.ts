@@ -17,6 +17,8 @@ export function getStorage(storageType: string): BookStorage {
   if (!StorageClass) {
     throw new Error('Invalid storage type');
   }
+  
+
   return new StorageClass();
 }
 

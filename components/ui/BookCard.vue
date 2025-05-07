@@ -24,8 +24,22 @@
 
             <!-- メニュー -->
             <div class="flex flex-col gap-2">
-                <Button variant="secondary" @click="navigateToEdit(book.id)">編集</Button>
-                <Button variant="destructive" @click="handleDelete(book.id)">削除</Button>
+                <Button variant="secondary" @click="">
+                    <Icon name="library" size="20" class="text-muted-foreground" />
+                    詳細
+                </Button>
+                <Button variant="secondary" @click="">
+                    <Icon name="coverup" size="20" class="text-muted-foreground" />
+                    表紙アップロード
+                </Button>
+                <Button variant="secondary" @click="navigateToEdit(book.id)">
+                    <Icon name="edit" size="20" class="text-muted-foreground" />
+                    編集
+                </Button>
+                <Button variant="destructive" @click="handleDelete(book.id)">
+                    <Icon name="trash" size="20" class="text-muted-foreground" />
+                    削除
+                </Button>
                 <Button variant="ghost" @click="toggleMenu">閉じる</Button>
             </div>
         </div>
@@ -85,7 +99,6 @@ export default {
                     }
 
                 } catch (error) {
-                    console.error('Error deleting book:', error);
                     alert('削除中にエラーが発生しました');
                 }
             }

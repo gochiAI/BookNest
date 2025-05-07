@@ -169,7 +169,6 @@ export default {
           }
 
           const book = await response.json();
-          console.log(book);
           // フォームに既存のデータをセット
           title.value = book.title;
           author.value = book.author.name;
@@ -191,15 +190,13 @@ export default {
         title: title.value,
         author: { name: author.value },
         publisher: { name: publisher.value },
-        series: series.value || null,
+        series: { name: series.value },
         isbn: isbn.value || null,
         releaseDate: releaseDate.value || null,
         readStatus: readStatus.value,
         bookType: bookType.value,
         volume: volume.value || null,
       };
-
-      console.log('Submitting Book:', newBook); // デバッグ用ログ
 
       try {
         const method = isEditMode.value ? "PUT" : "POST";
@@ -215,7 +212,6 @@ export default {
 
         if (!response.ok) {
           const errorText = await response.text();
-          console.error('Server Response Error:', errorText); // サーバーからのエラーを確認
           throw new Error(
             isEditMode.value
               ? "Failed to update book"
@@ -223,11 +219,6 @@ export default {
           );
         }
 
-        console.log(
-          isEditMode.value
-            ? "書籍が正常に更新されました"
-            : "書籍が正常に登録されました"
-        );
         sessionStorage.removeItem("x-book-id");
         router.push("/");
       } catch (error) {
