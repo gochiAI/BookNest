@@ -24,11 +24,11 @@
 
             <!-- メニュー -->
             <div class="flex flex-col gap-2">
-                <Button variant="secondary" @click="">
+                <Button variant="secondary" disabled title="近日実装予定">
                     <Icon name="library" size="20" class="text-muted-foreground" />
                     詳細
                 </Button>
-                <Button variant="secondary" @click="">
+                <Button variant="secondary" disabled title="近日実装予定">
                     <Icon name="coverup" size="20" class="text-muted-foreground" />
                     表紙アップロード
                 </Button>
@@ -97,6 +97,10 @@ export default {
                     if (!response.ok) {
                         throw new Error('削除に失敗しました');
                     }
+                    alert('書籍が正常に削除されました');
+                    this.$emit('book-deleted,id);
+
+                    this.toggleMenu();
 
                 } catch (error) {
                     alert('削除中にエラーが発生しました');

@@ -25,6 +25,6 @@ export default defineEventHandler(async (event) => {
   } catch (error) {
     console.error('Error fetching book:', error);
     const errorMessage = error instanceof Error ? error.message : 'Internal server error';
-    return sendError(event, new Error(errorMessage));
+    sendError(event, new Error(errorMessage));
   }
 });

@@ -2,7 +2,7 @@
   <component :is="Icon" v-bind="$attrs" />
 </template>
 <script setup>
-import { h } from "vue";
+import { h , defineComponent } from "vue";
 import {
   ArrowDownWideNarrow,
   ArrowLeft,  

@@ -1,5 +1,5 @@
 // storage/PrismaBookStorage.ts
-import { Prisma, PrismaClient,Book } from '@prisma/client';
+import { Prisma, PrismaClient, Book, BookType, ReadStatus } from '@prisma/client';
 import type { BookStorage, GetBooksParams, GetBooksResult } from 'interfaces/BookStorage.js';
 
 const prisma = new PrismaClient();
@@ -15,26 +15,26 @@ export class PrismaBookStorage implements BookStorage {
       sortOption, // ソート条件を受け取る
     } = params;
 
-    const where: any = {};
+    const where: Prisma.BookWhereInput = {};
     if (readStatus) {
-      where.readStatus = readStatus;
+      where.readStatus = readStatus as ReadStatus;
     }
     if (bookType) {
-      where.bookType = bookType;
+      where.bookType = bookType as BookType;
     }
     if (search) {
       where.OR = [
-        { title: { contains: search} }, // タイトルで検索
-        { author: { name: { contains: search,} } }, // 著者名で検索
-        { publisher: { name: { contains: search,} } }, // 出版社名で検索
-        { series: { name: { contains: search,} } }, // シリーズ名で検索
+      { title: { contains: search } }, // タイトルで検索
+      { author: { name: { contains: search } } }, // 著者名で検索
+      { publisher: { name: { contains: search } } }, // 出版社名で検索
+      { series: { name: { contains: search } } }, // シリーズ名で検索
       ];
     }
 
     const totalItems = await prisma.book.count({ where });
 
     // ソート条件を動的に設定
-    const orderBy: any[] = [];
+    const orderBy: Prisma.BookOrderByWithRelationInput[] = [];
     if (sortOption === 'title-asc') {
       orderBy.push({ title: 'asc' });
       orderBy.push({ volume: 'asc' });

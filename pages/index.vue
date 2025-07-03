@@ -54,7 +54,7 @@ const apiUrl = computed(() => {
 
 // useFetchで計算されたURLを使用
 const { data, error, pending, refresh } = useFetch(apiUrl, {
-  watch: [filters, currentPage],
+  watch: [filters, currentPage,sortOption],
   immediate: true,
 });
 const totalItems = computed(() => {
