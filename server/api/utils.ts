@@ -1,15 +1,12 @@
-import { JsonBookStorage } from '~/storage/JsonBookStorage';
-import { CsvBookStorage } from '~/storage/CsvBookStorage';
-import { MongoBookStorage } from '~/storage/MongoBookStorage';
+// import { JsonBookStorage } from '~/storage/JsonBookStorage';
+// import { CsvBookStorage } from '~/storage/CsvBookStorage';
+// import { MongoBookStorage } from '~/storage/MongoBookStorage';
 import { PrismaBookStorage } from '~/storage/PrismaBookStorage';
 import { BookStorage } from '~/interfaces/BookStorage';
 
 
 const storageMap = {
   prisma: PrismaBookStorage,
-  json: JsonBookStorage,
-  csv: CsvBookStorage,
-  mongo: MongoBookStorage,
 };
 
 export function getStorage(storageType: string): BookStorage {
