@@ -98,7 +98,7 @@ export default {
                         throw new Error('削除に失敗しました');
                     }
                     alert('書籍が正常に削除されました');
-                    this.$emit('book-deleted,id);
+                    this.$emit('book-deleted', id);
 
                     this.toggleMenu();
 
