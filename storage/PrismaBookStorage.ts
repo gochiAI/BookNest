@@ -1,42 +1,66 @@
 // storage/PrismaBookStorage.ts
-import { Prisma, PrismaClient, type Book } from '@prisma/client';
-import type { BookStorage } from 'interfaces/BookStorage.js';
+import { Prisma, PrismaClient, Book, BookType, ReadStatus } from '@prisma/client';
+import type { BookStorage, GetBooksParams, GetBooksResult } from 'interfaces/BookStorage.js';
 
 const prisma = new PrismaClient();
-type CreateBookInput = Omit<Book, 'id' | 'authorId' | 'publisherId' | 'seriesId'> & {
-  author: { name: string },
-  publisher: { name: string },
-  series?: { name: string }
-};
-
-type UpdateBookInput = Partial<Omit<Book, 'id' | 'authorId' | 'publisherId' | 'seriesId'>> & {
-  authorId?: string;
-  publisherId?: string;
-  seriesId?: string | null;
-  author?: { name: string };
-  publisher?: { name: string };
-  series?: { name: string } | null;
-};
-
 
 export class PrismaBookStorage implements BookStorage {
-  async getAllBooks(page: number, itemsPerPage: number): Promise<Book[]> {
-    const validPage = Number.isInteger(page) && page > 0 ? page : 1;
-    const validItemsPerPage = Number.isInteger(itemsPerPage) && itemsPerPage > 0 ? itemsPerPage : 15;
+  async getBooks(params: GetBooksParams): Promise<GetBooksResult> {
+    const {
+      page = 1,
+      itemsPerPage = 15,
+      readStatus,
+      bookType,
+      search,
+      sortOption, // ソート条件を受け取る
+    } = params;
 
-    return prisma.book.findMany({
-      skip: (validPage - 1) * validItemsPerPage,
-      take: validItemsPerPage,
+    const where: Prisma.BookWhereInput = {};
+    if (readStatus) {
+      where.readStatus = readStatus as ReadStatus;
+    }
+    if (bookType) {
+      where.bookType = bookType as BookType;
+    }
+    if (search) {
+      where.OR = [
+      { title: { contains: search } }, // タイトルで検索
+      { author: { name: { contains: search } } }, // 著者名で検索
+      { publisher: { name: { contains: search } } }, // 出版社名で検索
+      { series: { name: { contains: search } } }, // シリーズ名で検索
+      ];
+    }
+
+    const totalItems = await prisma.book.count({ where });
+
+    // ソート条件を動的に設定
+    const orderBy: Prisma.BookOrderByWithRelationInput[] = [];
+    if (sortOption === 'title-asc') {
+      orderBy.push({ title: 'asc' });
+      orderBy.push({ volume: 'asc' });
+    } else if (sortOption === 'title-desc') {
+      orderBy.push({ title: 'desc' });
+      orderBy.push({ volume: 'desc' });
+    } else if (sortOption === 'date-asc') {
+      orderBy.push({ releaseDate: 'asc' });
+    } else if (sortOption === 'date-desc') {
+      orderBy.push({ releaseDate: 'desc' });
+    }
+    
+
+    const books = await prisma.book.findMany({
+      where,
+      skip: (page - 1) * itemsPerPage,
+      take: itemsPerPage,
       include: {
         author: true,
         publisher: true,
         series: true,
       },
-      orderBy: [
-        { title: 'asc' },
-        { releaseDate: 'asc' },
-      ],
+      orderBy, // 動的なソート条件を適用
     });
+
+    return { books, totalItems };
   }
 
   async getBookById(id: string): Promise<Book | null> {
@@ -49,8 +73,7 @@ export class PrismaBookStorage implements BookStorage {
       },
     });
   }
-
-  async createBook(book: CreateBookInput): Promise<Book> {
+  async createBook(book: Book): Promise<Book> {
     try {
       return prisma.$transaction(async (tx) => {
         const author = await tx.author.upsert({
@@ -65,28 +88,33 @@ export class PrismaBookStorage implements BookStorage {
           create: { name: book.publisher.name }
         });
 
-        let series;
-        if (book.series) {
-          series = await tx.series.upsert({
-            where: { name: book.series.name },
-            update: {},
-            create: { name: book.series.name }
-          });
-        }
+        const series = await tx.series.upsert({
+          where: { name: book.series.name },
+          update: {},
+          create: { name: book.series.name }
+        });
 
         // releaseDateをDateオブジェクトに変換
         const releaseDate = book.releaseDate ? new Date(book.releaseDate) : null;
 
         return tx.book.create({
           data: {
-            title: book.title,
+            title: book.title || 'Untitled',
             releaseDate: releaseDate, // Dateオブジェクトを渡す
             coverUrl: book.coverUrl,
             volume: book.volume,
             isbn: book.isbn|| undefined,
-            authorId: author.id,
-            publisherId: publisher.id,
-            seriesId: series?.id,
+            author: {
+              connect: { id: author.id }, // リレーションを設定
+            },
+            publisher: {
+              connect: { id: publisher.id }, // リレーションを設定
+            },
+            series: series
+              ? {
+                  connect: { id: series.id }, // リレーションを設定
+                }
+              : undefined,
             bookType: book.bookType,
             readStatus: book.readStatus,
           },
@@ -105,13 +133,14 @@ export class PrismaBookStorage implements BookStorage {
 
   async updateBook(
     id: string,
-    book: UpdateBookInput
+    book: Partial<Book>
   ): Promise<Book> {
     return prisma.$transaction(async (tx) => {
-      const { author, publisher, series, ...updateData } = book;
+      const { author, publisher, series, releaseDate, ...updateData } = book;
   
       const bookUpdate: Prisma.BookUpdateInput = {
         ...updateData,
+        releaseDate: releaseDate ? new Date(releaseDate) : null, // 修正: Date オブジェクトに変換
         author: author?.name
           ? {
               connectOrCreate: {
@@ -150,8 +179,6 @@ export class PrismaBookStorage implements BookStorage {
     });
   }
   
-  
-
   async deleteBook(id: string): Promise<void> {
     try {
       await prisma.book.delete({
@@ -162,4 +189,5 @@ export class PrismaBookStorage implements BookStorage {
       throw new Error('Error deleting book');
     }
   }
+
 }

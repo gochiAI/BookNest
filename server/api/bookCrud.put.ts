@@ -7,16 +7,19 @@ export default defineEventHandler(async (event) => {
 
   try {
     const body = await readBody(event);
-    const { id, ...updateData } = body;
+    const bookId = Array.isArray(event.node.req.headers['x-book-id'])
+      ? event.node.req.headers['x-book-id'][0]
+      : event.node.req.headers['x-book-id'];
 
-    // バリデーション
+    if (!bookId) {
+      throw new Error('Book ID is required');
+    }
+
     await validateBookData(body, storageType);
 
-    // 書籍を更新
-    const updatedBook = await storage.updateBook(id, updateData);
+    const updatedBook = await storage.updateBook(bookId, body);
     return updatedBook;
   } catch (error) {
-    console.error('Error updating book:', error);
     const errorMessage = error instanceof Error ? error.message : 'Internal server error put';
     return sendError(event, new Error(errorMessage));
   }

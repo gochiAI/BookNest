@@ -1,7 +1,12 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   compatibilityDate: '2024-04-03',
-  devtools: { enabled: true },
+  devtools: {
+    enabled: true,
+    timeline: {
+      enabled: true,
+    },
+  },
   css: [
     '@/assets/css/topToast.css',
     '~/assets/css/theme.css', // カスタムテーマスタイルを追加
@@ -25,8 +30,8 @@ export default defineNuxtConfig({
     '@nuxtjs/tailwindcss',
     '@nuxtjs/i18n',
     '@vueuse/nuxt',
-    '@nuxt/icon',
     '@nuxtjs/device',
+    '@nuxt/devtools',
   ],
   i18n: {
     locales: [
@@ -43,13 +48,5 @@ export default defineNuxtConfig({
       cookieKey: 'i18n_redirected',
       alwaysRedirect: true,
     },
-  },
-  icon: {
-    customCollections: [
-      {
-        prefix: 'my-icon',
-        dir: './assets/icons'
-      },
-    ],
   },
 })
