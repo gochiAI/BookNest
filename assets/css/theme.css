@@ -1,0 +1,19 @@
+/* assets/css/theme.css */
+
+/* Light Theme */
+.light-theme .btn {
+  background-color: #007bff;
+  color: white;
+}
+.light-theme .btn:hover {
+  background-color: #0056b3;
+}
+
+/* Dark Theme */
+.dark-theme .btn {
+  background-color: #4a5568;
+  color: white;
+}
+.dark-theme .btn:hover {
+  background-color: #2d3748;
+}

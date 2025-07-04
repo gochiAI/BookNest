@@ -1,0 +1,74 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Book {
+  id          String     @id @default(uuid()) @db.VarChar(36)
+  title       String     @db.VarChar(255)
+  releaseDate DateTime?
+  coverUrl    String?    @db.VarChar(512)
+  volume      Int?
+  isbn        String?    @unique @db.VarChar(13)
+  bookType    BookType   @default(General)
+  readStatus  ReadStatus @default(Unread)
+  authorId    String     @db.VarChar(36)
+  publisherId String     @db.VarChar(36)
+  seriesId    String?    @db.VarChar(36)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  author      Author     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  publisher   Publisher  @relation(fields: [publisherId], references: [id], onDelete: Cascade)
+  series      Series?    @relation(fields: [seriesId], references: [id], onDelete: Cascade)
+
+  @@unique([title, volume], name: "unique_title_volume")
+  @@index([bookType, readStatus], map: "idx_bookType_readStatus")
+  @@index([releaseDate, id], map: "idx_releaseDate_id")
+  @@index([authorId], map: "books_authorId_fkey")
+  @@index([publisherId], map: "books_publisherId_fkey")
+  @@index([seriesId], map: "books_seriesId_fkey")
+  @@map("books")
+}
+
+model Author {
+  id    String @id @default(uuid()) @db.VarChar(36)
+  name  String @unique @db.VarChar(255)
+  books Book[]
+
+  @@index([name], map: "idx_author_name")
+  @@map("authors")
+}
+
+model Publisher {
+  id    String @id @default(uuid()) @db.VarChar(36)
+  name  String @unique @db.VarChar(100)
+  books Book[]
+
+  @@index([name], map: "idx_publisher_name")
+  @@map("publishers")
+}
+
+model Series {
+  id    String @id @default(uuid()) @db.VarChar(36)
+  name  String @unique @db.VarChar(100)
+  books Book[]
+
+  @@map("series")
+}
+
+enum BookType {
+  General
+  Manga
+  LightNovel
+  Other
+}
+
+enum ReadStatus {
+  Unread
+  Completed
+  Reading
+}

@@ -1,0 +1,3 @@
+.top-toast {
+  z-index: 1050 !important; /* モーダルのz-indexより高く設定 */
+}
