@@ -1,10 +1,9 @@
+import { defineEventHandler, getQuery, createError } from 'h3';
 import { getStorage } from './utils';
 
 export default defineEventHandler(async (event) => {
   const query = getQuery(event);
-
-  // ストレージタイプを取得（デフォルトは Prisma）
-  const storageType = (event.node.req.headers['x-storage-type'] as string) || 'prisma';
+  const storageType = 'prisma';
   const storage = getStorage(storageType);
 
   // クエリパラメータを取得
@@ -13,6 +12,7 @@ export default defineEventHandler(async (event) => {
   const readStatus = query.readStatus as string;
   const bookType = query.bookType as string;
   const search = query.search as string;
+  const tag = query.tag as string; // タグ検索を追加
   const sortOption = query.sortOption as string; // ソート条件を取得
 
   try {
@@ -23,6 +23,7 @@ export default defineEventHandler(async (event) => {
       readStatus,
       bookType,
       search,
+      tag, // タグ条件を渡す
       sortOption, // ソート条件を渡す
     });
 

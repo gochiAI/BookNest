@@ -153,32 +153,25 @@ export default {
 
     // 編集モードの場合、既存のデータを取得
     onMounted(async () => {
-      const bookId = sessionStorage.getItem("x-book-id"); // ヘッダー情報を取得
+      const bookId = sessionStorage.getItem("x-book-id");
       if (bookId) {
         isEditMode.value = true;
         try {
           const response = await fetch(`/api/bookCrud`, {
             method: "GET",
-            headers: {
-              "x-book-id": bookId,
-            },
+            headers: { "x-book-id": bookId },
           });
-
-          if (!response.ok) {
-            throw new Error("Failed to fetch book data");
-          }
-
+          if (!response.ok) throw new Error("Failed to fetch book data");
           const book = await response.json();
-          // フォームに既存のデータをセット
           title.value = book.title;
-          author.value = book.author.name;
-          publisher.value = book.publisher.name;
-          series.value = book.series ? book.series.name : "";
+          author.value = book.authors?.[0]?.author?.name ?? "";
+          publisher.value = book.publisher?.name ?? "";
+          series.value = book.series?.name ?? "";
           isbn.value = book.isbn || "";
           releaseDate.value = book.releaseDate ? formatDate(book.releaseDate) : "";
           readStatus.value = book.readStatus;
           bookType.value = book.bookType;
-          volume.value = book.volume || null;
+          volume.value = book.volume ?? null;
         } catch (error) {
           console.error("書籍データの取得中にエラーが発生しました:", error);
         }
@@ -188,35 +181,30 @@ export default {
     const handleSubmit = async () => {
       const newBook = {
         title: title.value,
-        author: { name: author.value },
-        publisher: { name: publisher.value },
-        series: { name: series.value },
+        authorNames: author.value ? [author.value] : [],
+        publisherName: publisher.value || undefined,
+        seriesName: series.value || undefined,
         isbn: isbn.value || null,
         releaseDate: releaseDate.value || null,
-        readStatus: readStatus.value,
-        bookType: bookType.value,
-        volume: volume.value || null,
+        readStatus: readStatus.value || "Unread",
+        bookType: bookType.value || "General",
+        volume: volume.value ?? null,
       };
 
       try {
         const method = isEditMode.value ? "PUT" : "POST";
-
         const response = await fetch(`/api/bookCrud`, {
           method,
           headers: {
             "Content-Type": "application/json",
-            "x-book-id": isEditMode.value ? sessionStorage.getItem("x-book-id") : "",
+            "x-book-id": isEditMode.value ? sessionStorage.getItem("x-book-id") || "" : "",
           },
           body: JSON.stringify(newBook),
         });
 
         if (!response.ok) {
           const errorText = await response.text();
-          throw new Error(
-            isEditMode.value
-              ? "Failed to update book"
-              : "Failed to create book"
-          );
+          throw new Error(method === "PUT" ? "Failed to update book" : "Failed to create book");
         }
 
         sessionStorage.removeItem("x-book-id");

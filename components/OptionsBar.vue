@@ -52,12 +52,13 @@ const layoutOptions = [
 const selectedSortOption = defineModel("sortOption");
 const selectedLayoutOption = defineModel("layout");
 
+// Router インスタンスを setup レベルで取得
+const router = useRouter();
+
 // 新規登録ボタンのクリック処理
 const handleNewBook = () => {
-  const router = useRouter();
   sessionStorage.removeItem('x-book-id');
   router.push("/new");
-  
 };
 </script>
 

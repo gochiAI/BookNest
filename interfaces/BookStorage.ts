@@ -1,26 +1,61 @@
-import { Book } from '@prisma/client';
+import { Book, Author, Publisher, Series, Collection, Tag } from '@prisma/client';
 
+// 追加: 保存時に受け取る拡張入力型
+export type SaveBookInput = Partial<Book> & {
+  authorNames?: string[];
+  publisherName?: string;
+  seriesName?: string;
+  collectionIds?: string[];
+  tagIds?: string[];
+};
+
+// Bookに関連データを含む型
+export type BookWithRelations = Book & {
+  authors: Array<{ author: Author; role: string | null }>;
+  publisher: Publisher | null;
+  series: Series | null;
+  collections: Array<{ collection: Collection }>;
+  tags: Array<{ tag: Tag }>;
+};
 
 // 検索・フィルタリング・ページネーション条件をまとめた型
 export interface GetBooksParams {
-  page?: number; // ページ番号 (デフォルト値を持つ場合があるためオプショナル)
-  itemsPerPage?: number; // 表示数 (デフォルト値を持つ場合があるためオプショナル)
-  readStatus?: string; // 読書ステータス (オプショナル)
-  bookType?: string; // 書籍タイプ (オプショナル)
-  search?: string; // 検索キーワード (オプショナル)
-  sortOption?: string; // ソート条件 (オプショナル)
+  page?: number;
+  itemsPerPage?: number;
+  readStatus?: string;
+  bookType?: string;
+  search?: string;
+  tag?: string; // 単一タグ検索を追加
+  sortOption?: string;
+  collectionId?: string;
+  tagIds?: string[];
+  tagNames?: string[];
 }
 
-// 取得結果の型 (アイテムリストと合計件数を含む)
+// 取得結果の型
 export interface GetBooksResult {
-  books: Book[];
-  totalItems: number; // フィルタリング後の全件数
+  books: BookWithRelations[];
+  totalItems: number;
 }
 
 export interface BookStorage {
-  // 検索、フィルタリング、ページネーション条件を受け取るメソッド
   getBooks(params: GetBooksParams): Promise<GetBooksResult>;
-  createBook(book: Partial<Book>): Promise<Book>;
-  updateBook(id: string, book: Partial<Book>): Promise<Book>;
+  createBook(book: SaveBookInput): Promise<Book>;          // 更新
+  updateBook(id: string, book: SaveBookInput): Promise<Book>; // 更新
   deleteBook(id: string): Promise<void>;
+  
+  // Collection管理
+  getCollections(): Promise<Collection[]>;
+  createCollection(name: string, description?: string): Promise<Collection>;
+  updateCollection(id: string, name?: string, description?: string): Promise<Collection>;
+  deleteCollection(id: string): Promise<void>;
+  addBookToCollection(bookId: string, collectionId: string): Promise<void>;
+  removeBookFromCollection(bookId: string, collectionId: string): Promise<void>;
+  
+  // Tag管理
+  getTags(): Promise<Tag[]>;
+  createTag(name: string): Promise<Tag>;
+  deleteTag(id: string): Promise<void>;
+  addTagToBook(bookId: string, tagId: string): Promise<void>;
+  removeTagFromBook(bookId: string, tagId: string): Promise<void>;
 }

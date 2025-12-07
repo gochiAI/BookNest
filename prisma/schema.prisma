@@ -3,61 +3,133 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
 model Book {
-  id          String     @id @default(uuid()) @db.VarChar(36)
-  title       String     @db.VarChar(255)
-  releaseDate DateTime?
-  coverUrl    String?    @db.VarChar(512)
-  volume      Int?
-  isbn        String?    @unique @db.VarChar(13)
-  bookType    BookType   @default(General)
-  readStatus  ReadStatus @default(Unread)
-  authorId    String     @db.VarChar(36)
-  publisherId String     @db.VarChar(36)
-  seriesId    String?    @db.VarChar(36)
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
-  author      Author     @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  publisher   Publisher  @relation(fields: [publisherId], references: [id], onDelete: Cascade)
-  series      Series?    @relation(fields: [seriesId], references: [id], onDelete: Cascade)
+  id           String    @id @default(uuid())
+  title        String
+  releaseDate  DateTime?
+  coverUrl     String?
+  
+  volume       Int?
+  volumeSuffix String?
+  
+  isbn         String?   @unique
+  bookType     BookType  @default(General)
+  readStatus   ReadStatus @default(Unread)
 
-  @@unique([title, volume], name: "unique_title_volume")
-  @@index([bookType, readStatus], map: "idx_bookType_readStatus")
-  @@index([releaseDate, id], map: "idx_releaseDate_id")
-  @@index([authorId], map: "books_authorId_fkey")
-  @@index([publisherId], map: "books_publisherId_fkey")
-  @@index([seriesId], map: "books_seriesId_fkey")
+  publisherId  String?
+  seriesId     String?
+  
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  // リレーション
+  authors      BookAuthor[]
+  
+  publisher    Publisher? @relation(fields: [publisherId], references: [id], onDelete: Cascade)
+  series       Series?    @relation(fields: [seriesId], references: [id], onDelete: Cascade)
+  
+  collections  BookCollection[]
+  tags         BookTag[]
+
+  @@unique([title, volume, volumeSuffix], name: "unique_book_entry")
+  
+  // 検索・ソート用インデックス
+  @@index([title, volume, volumeSuffix])
+  @@index([bookType, readStatus])
+  @@index([releaseDate, id])
+  @@index([publisherId])
+  @@index([seriesId])
+  @@index([createdAt])
   @@map("books")
 }
 
-model Author {
-  id    String @id @default(uuid()) @db.VarChar(36)
-  name  String @unique @db.VarChar(255)
-  books Book[]
+model BookAuthor {
+  bookId   String
+  authorId String
+  role     String?  @default("Author") 
+   
+  book     Book   @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  author   Author @relation(fields: [authorId], references: [id], onDelete: Cascade)
 
-  @@index([name], map: "idx_author_name")
+  @@id([bookId, authorId])
+  @@index([authorId])
+  @@map("book_authors")
+}
+
+model Author {
+  id    String @id @default(uuid())
+  name  String @unique
+  books BookAuthor[]
+
+  @@index([name])
   @@map("authors")
 }
 
 model Publisher {
-  id    String @id @default(uuid()) @db.VarChar(36)
-  name  String @unique @db.VarChar(100)
+  id    String @id @default(uuid())
+  name  String @unique
   books Book[]
 
-  @@index([name], map: "idx_publisher_name")
+  @@index([name])
   @@map("publishers")
 }
 
 model Series {
-  id    String @id @default(uuid()) @db.VarChar(36)
-  name  String @unique @db.VarChar(100)
+  id    String @id @default(uuid())
+  name  String @unique
   books Book[]
 
   @@map("series")
+}
+
+model Collection {
+  id          String           @id @default(uuid())
+  name        String           @unique
+  description String?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  books       BookCollection[]
+
+  @@index([name])
+  @@map("collections")
+}
+
+model Tag {
+  id        String    @id @default(uuid())
+  name      String    @unique
+  createdAt DateTime  @default(now())
+  books     BookTag[]
+
+  @@index([name])
+  @@map("tags")
+}
+
+model BookCollection {
+  bookId       String
+  collectionId String
+  addedAt      DateTime   @default(now())
+  book         Book       @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  collection   Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+
+  @@id([bookId, collectionId])
+  @@index([collectionId])
+  @@map("book_collections")
+}
+
+model BookTag {
+  bookId  String
+  tagId   String
+  addedAt DateTime @default(now())
+  book    Book     @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  tag     Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([bookId, tagId])
+  @@index([tagId])
+  @@map("book_tags")
 }
 
 enum BookType {

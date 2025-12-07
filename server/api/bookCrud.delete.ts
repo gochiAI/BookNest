@@ -1,4 +1,4 @@
-import { defineEventHandler, readBody, sendError } from 'h3';
+import { defineEventHandler, readBody, createError } from 'h3';
 import { getStorage } from './utils';
 
 export default defineEventHandler(async (event) => {
@@ -13,7 +13,7 @@ export default defineEventHandler(async (event) => {
     return deletedBook;
   } catch (error) {
     console.error('Error deleting book:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Internal server error delete';
-    return sendError(event, new Error(errorMessage));
+    const errorMessage = error instanceof Error ? error.message : 'Internal server error';
+    throw createError({ statusCode: 500, message: errorMessage });
   }
 });

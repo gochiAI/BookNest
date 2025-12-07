@@ -1,4 +1,4 @@
-import { defineEventHandler, sendError } from 'h3';
+import { defineEventHandler, createError } from 'h3';
 import { getStorage } from './utils';
 
 export default defineEventHandler(async (event) => {
@@ -25,6 +25,6 @@ export default defineEventHandler(async (event) => {
   } catch (error) {
     console.error('Error fetching book:', error);
     const errorMessage = error instanceof Error ? error.message : 'Internal server error';
-    sendError(event, new Error(errorMessage));
+    throw createError({ statusCode: 500, message: errorMessage });
   }
 });

@@ -1,5 +1,7 @@
 <template>
-  <div class="container mx-auto px-4 py-8" @contextmenu.prevent>
-    <NuxtPage />
+  <div>
+    <NuxtLayout name="default">
+      <NuxtPage />
+    </NuxtLayout>
   </div>
 </template>

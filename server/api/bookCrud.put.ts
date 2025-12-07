@@ -1,4 +1,4 @@
-import { defineEventHandler, readBody, sendError } from 'h3';
+import { defineEventHandler, readBody, createError } from 'h3';
 import { validateBookData, getStorage } from './utils';
 
 export default defineEventHandler(async (event) => {
@@ -15,12 +15,12 @@ export default defineEventHandler(async (event) => {
       throw new Error('Book ID is required');
     }
 
-    await validateBookData(body, storageType);
+    await validateBookData(body);
 
     const updatedBook = await storage.updateBook(bookId, body);
     return updatedBook;
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Internal server error put';
-    return sendError(event, new Error(errorMessage));
+    const errorMessage = error instanceof Error ? error.message : 'Internal server error';
+    throw createError({ statusCode: 500, message: errorMessage });
   }
 });

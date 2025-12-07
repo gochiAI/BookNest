@@ -5,15 +5,16 @@
       :key="book.id"
       :book="book"
       :layout="layout"
+      :is-selected="selectedBooks.has(book.id)"
+      @toggle-select="$emit('toggle-select', book.id)"
     />
   </div>
 </template>
 
 <script setup>
-import { ref } from "vue";
 import BookCard from "@/components/ui/BookCard.vue";
 
-const props = defineProps({
+defineProps({
   books: {
     type: Array,
     required: true,
@@ -22,8 +23,13 @@ const props = defineProps({
     type: String,
     default: "grid",
   },
+  selectedBooks: {
+    type: Set,
+    required: true,
+  },
 });
 
+defineEmits(['toggle-select']);
 </script>
 
 <style scoped>

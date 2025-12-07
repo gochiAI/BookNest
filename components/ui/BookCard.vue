@@ -1,19 +1,31 @@
 <template>
     <Card>
         <template #header>
-            <div>
-                <h3 class="text-lg font-bold">{{ book.title }} - {{ book.volume }}</h3>
-                <p class="text-sm text-muted-foreground">By {{ book.author.name }}</p>
+            <div class="flex items-center gap-3">
+                <input 
+                  type="checkbox" 
+                  :checked="isSelected"
+                  @change="$emit('toggle-select')"
+                  class="w-4 h-4 rounded border-gray-300 cursor-pointer"
+                />
+                <div>
+                    <h3 class="text-lg font-bold">{{ book.title }} - {{ book.volume }}</h3>
+                    <p class="text-sm text-muted-foreground">By {{ authorNames }}</p>
+                </div>
             </div>
         </template>
         <template #header-action>
-            <Button variant="ghost" size="icon" @click="toggleMenu">
+            <Button variant="ghost" size="icon" @click="navigateToDetail">
                 <Icon name="bookdetail" size="20" class="text-muted-foreground" />
             </Button>
         </template>
         <template #content>
             <img :src="book.coverUrl" :alt="`Cover of ${book.title}`"
                 :class="layout === 'grid' ? 'w-full h-48 object-cover rounded-md mb-4' : 'w-24 h-24 object-cover rounded-md'" />
+            <div class="text-sm text-gray-600 space-y-2">
+                <div>出版社: {{ publisherName }}</div>
+                <div>シリーズ: {{ seriesName }}</div>
+            </div>
         </template>
     </Card>
 
@@ -46,69 +58,78 @@
     </div>
 </template>
 
-<script>
+<script setup>
 import Card from './Card.vue';
 import Button from './Button.vue';
 import Icon from '../icons.vue';
+import { computed, ref } from 'vue'; // ref を追加
+import { useRouter } from 'vue-router'; // router 用
+const emit = defineEmits(['book-deleted', 'toggle-select']); // emit を定義
+const router = useRouter();
 
-export default {
-    name: 'BookCard',
-    components: {
-        Card,
-        Button,
-        Icon,
+const props = defineProps({
+    book: {
+        type: Object,
+        required: true,
     },
-    props: {
-        book: {
-            type: Object,
-            required: true,
-        },
-        layout: {
-            type: String,
-            required: true,
-        },
+    layout: {
+        type: String,
+        required: true,
     },
-    data() {
-        return {
-            isMenuVisible: false, // メニューの表示状態を管理
-        };
+    isSelected: {
+        type: Boolean,
+        default: false,
     },
-    methods: {
-        toggleMenu() {
-            this.isMenuVisible = !this.isMenuVisible;
-        },
-        navigateToEdit(bookId) {
-            // 編集ページに遷移し、ヘッダーで bookId を渡す
-            this.$router.push({ path: '/new' });
-            sessionStorage.setItem('x-book-id', bookId);
-        },
-        async handleDelete(id) {
-            const confirmed = window.confirm('本当にこの本を削除しますか？');
-            if (confirmed) {
-                try {
-                    const response = await fetch('/api/bookCrud', {
-                        method: 'DELETE',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({ id }),
-                    });
+});
 
-                    if (!response.ok) {
-                        throw new Error('削除に失敗しました');
-                    }
-                    alert('書籍が正常に削除されました');
-                    this.$emit('book-deleted', id);
+const isMenuVisible = ref(false);
 
-                    this.toggleMenu();
-
-                } catch (error) {
-                    alert('削除中にエラーが発生しました');
-                }
-            }
-        },
-    },
+const toggleMenu = () => {
+    isMenuVisible.value = !isMenuVisible.value;
 };
+
+const navigateToDetail = () => {
+    router.push(`/books/${props.book.id}`);
+};
+
+const navigateToEdit = (bookId) => {
+    // 編集ページに遷移し、ヘッダーで bookId を渡す
+    router.push({ path: '/new' });
+    sessionStorage.setItem('x-book-id', bookId);
+};
+
+const handleDelete = async (id) => {
+    const confirmed = window.confirm('本当にこの本を削除しますか？');
+    if (confirmed) {
+        try {
+            const response = await fetch('/api/bookCrud', {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ id }),
+            });
+
+            if (!response.ok) {
+                throw new Error('削除に失敗しました');
+            }
+            alert('書籍が正常に削除されました');
+            emit('book-deleted', id);
+
+            toggleMenu();
+
+        } catch (error) {
+            alert('削除中にエラーが発生しました');
+        }
+    }
+};
+
+const publisherName = computed(() => props.book.publisher?.name ?? '―');
+const seriesName = computed(() => props.book.series?.name ?? '―');
+const authorNames = computed(() => (props.book.authors ?? [])
+  .map((a) => a.author?.name)
+  .filter(Boolean)
+  .join(', ') || '―');
 </script>
 
 <style scoped>
