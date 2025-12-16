@@ -7,41 +7,43 @@
     <form @submit.prevent="handleSubmit" class="grid gap-4">
       <div>
         <label for="title" class="text-sm font-medium leading-none">Title</label>
-        <input
-          type="text"
+        <TitleSuggestions
           id="title"
-          v-model="title"
-          required
-          class="border rounded-md px-3 py-2 w-full"
+          :model-value="title"
+          :author-options="authorOptions"
+          :series-options="seriesOptions"
+          @update:model-value="title = $event; handleTitleInput()"
+          @select-suggestion="handleSelectTitleSuggestion"
         />
       </div>
       <div>
         <label for="author" class="text-sm font-medium leading-none">Author</label>
-        <input
-          type="text"
+        <AutoComplete
           id="author"
-          v-model="author"
-          required
-          class="border rounded-md px-3 py-2 w-full"
+          :model-value="author"
+          :options="authorOptions"
+          @update:model-value="author = $event; handleAuthorInput()"
+          placeholder="著者を検索"
         />
       </div>
       <div>
         <label for="publisher" class="text-sm font-medium leading-none">Publisher</label>
-        <input
-          type="text"
+        <AutoComplete
           id="publisher"
-          v-model="publisher"
-          required
-          class="border rounded-md px-3 py-2 w-full"
+          :model-value="publisher"
+          :options="publisherOptions"
+          @update:model-value="publisher = $event; handlePublisherInput()"
+          placeholder="出版社を検索"
         />
       </div>
       <div>
         <label for="series" class="text-sm font-medium leading-none">Series</label>
-        <input
-          type="text"
+        <AutoComplete
           id="series"
-          v-model="series"
-          class="border rounded-md px-3 py-2 w-full"
+          :model-value="series"
+          :options="seriesOptions"
+          @update:model-value="series = $event; handleSeriesInput()"
+          placeholder="シリーズを検索"
         />
       </div>
       <div>
@@ -110,11 +112,15 @@
 import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import Button from "@/components/ui/Button.vue";
+import AutoComplete from "@/components/AutoComplete.vue";
+import TitleSuggestions from "@/components/TitleSuggestions.vue";
 import { BookType, ReadStatus } from "@/constants/book.ts";
 
 export default {
   components: {
     Button,
+    AutoComplete,
+    TitleSuggestions,
   },
   setup() {
     const router = useRouter();
@@ -141,6 +147,67 @@ export default {
       label: status,
       value: status,
     }));
+
+    // 自動補完用のオプション（ダミーデータ）
+    const authorOptions = ref([]);
+    const publisherOptions = ref([]);
+    const seriesOptions = ref([]);
+
+    // APIから自動補完候補を取得
+    const fetchAutocompleteSuggestions = async (query, type = 'all') => {
+      if (!query || query.length < 1) {
+        return { authors: [], series: [], publishers: [] };
+      }
+      try {
+        const url = type === 'all' 
+          ? `/api/autocomplete?query=${encodeURIComponent(query)}`
+          : `/api/autocomplete?query=${encodeURIComponent(query)}&type=${type}`;
+        const response = await fetch(url);
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.message || `HTTP ${response.status}`);
+        }
+        const data = await response.json();
+        return data;
+      } catch (error) {
+        console.error('自動補完候補の取得に失敗しました:', error);
+        return { authors: [], series: [], publishers: [] };
+      }
+    };
+
+    // タイトルの入力時に著者とシリーズの候補を更新
+    const handleTitleInput = async () => {
+      const data = await fetchAutocompleteSuggestions(title.value, 'by-title');
+      authorOptions.value = data.authors;
+      seriesOptions.value = data.series;
+    };
+
+    // タイトル候補から選択した時のハンドラー
+    const handleSelectTitleSuggestion = (suggestion) => {
+      if (suggestion.type === 'author' && suggestion.authors && suggestion.authors[0]) {
+        author.value = suggestion.authors[0];
+      } else if (suggestion.type === 'series' && suggestion.series && suggestion.series[0]) {
+        series.value = suggestion.series[0];
+      }
+    };
+
+    // 著者の入力時に候補を更新
+    const handleAuthorInput = async () => {
+      const data = await fetchAutocompleteSuggestions(author.value, 'author');
+      authorOptions.value = data.authors;
+    };
+
+    // 出版社の入力時に候補を更新
+    const handlePublisherInput = async () => {
+      const data = await fetchAutocompleteSuggestions(publisher.value, 'publisher');
+      publisherOptions.value = data.publishers;
+    };
+
+    // シリーズの入力時に候補を更新
+    const handleSeriesInput = async () => {
+      const data = await fetchAutocompleteSuggestions(series.value, 'series');
+      seriesOptions.value = data.series;
+    };
 
     // 日付を yyyy-MM-dd フォーマットに変換する関数
     const formatDate = (isoDate) => {
@@ -236,9 +303,17 @@ export default {
       volume,
       bookTypeOptions,
       readStatusOptions,
+      authorOptions,
+      publisherOptions,
+      seriesOptions,
       handleSubmit,
       cancel,
       isEditMode,
+      handleTitleInput,
+      handleSelectTitleSuggestion,
+      handleAuthorInput,
+      handlePublisherInput,
+      handleSeriesInput,
     };
   },
 };

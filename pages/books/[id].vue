@@ -17,6 +17,10 @@
           <Icon name="edit" size="20" class="mr-2" />
           Edit
         </Button>
+        <Button @click="handleDelete" variant="destructive">
+          <Icon name="trash" size="20" class="mr-2" />
+          Delete
+        </Button>
       </div>
     </div>
 
@@ -310,6 +314,31 @@ const removeTag = async (tagId) => {
 const navigateToEdit = () => {
   sessionStorage.setItem('x-book-id', bookId.value);
   router.push('/new');
+};
+
+const handleDelete = async () => {
+  const confirmed = window.confirm('本当にこの書籍を削除しますか？');
+  if (!confirmed) return;
+
+  try {
+    const response = await fetch('/api/bookCrud', {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ id: bookId.value }),
+    });
+
+    if (!response.ok) {
+      throw new Error('削除に失敗しました');
+    }
+
+    alert('書籍が正常に削除されました');
+    router.push('/');
+  } catch (error) {
+    console.error('Error deleting book:', error);
+    alert('削除中にエラーが発生しました');
+  }
 };
 
 onMounted(() => {

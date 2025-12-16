@@ -36,38 +36,16 @@
           <p class="text-sm text-gray-600 mt-1">{{ filteredAuthors.length }} author(s)</p>
         </div>
         <div v-if="filteredAuthors.length > 0" class="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-          <div
+          <GroupCard
             v-for="author in filteredAuthors"
             :key="author.id"
-            class="border rounded-lg p-4 bg-white hover:shadow-lg transition cursor-pointer"
-            @click="viewGroupBooks('author', author.id, author.name)"
-          >
-            <h3 class="font-bold text-lg text-gray-800 mb-3">{{ author.name }}</h3>
-            <p class="text-sm text-gray-600 mb-3">{{ author.bookCount }} book(s)</p>
-            <div v-if="author.books && author.books.length > 0" class="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-3">
-              <div 
-                v-for="book in author.books" 
-                :key="book.id" 
-                class="relative group"
-              >
-                <img
-                  v-if="book.coverUrl"
-                  :src="book.coverUrl"
-                  :alt="book.title"
-                  class="w-full aspect-[2/3] object-cover rounded shadow-sm"
-                />
-                <div v-else class="w-full aspect-[2/3] bg-gray-200 rounded flex items-center justify-center">
-                  <Icon name="library" size="24" class="text-gray-400" />
-                </div>
-                <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition rounded flex items-end p-1">
-                  <p class="text-white text-xs truncate opacity-0 group-hover:opacity-100 transition">{{ book.title }}</p>
-                </div>
-              </div>
-            </div>
-            <button class="w-full text-blue-600 hover:text-blue-700 text-sm font-medium">
-              → View All Books
-            </button>
-          </div>
+            :name="author.name"
+            :book-count="author.bookCount"
+            :books="author.books"
+            button-class="text-blue-600 hover:text-blue-700"
+            @click-card="viewGroupBooks('author', author.id, author.name)"
+            @click-book="navigateToBook"
+          />
         </div>
         <div v-else class="text-center py-8 bg-gray-50 rounded">
           <p class="text-gray-500">No authors found</p>
@@ -81,38 +59,16 @@
           <p class="text-sm text-gray-600 mt-1">{{ filteredPublishers.length }} publisher(s)</p>
         </div>
         <div v-if="filteredPublishers.length > 0" class="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-          <div
+          <GroupCard
             v-for="publisher in filteredPublishers"
             :key="publisher.id"
-            class="border rounded-lg p-4 bg-white hover:shadow-lg transition cursor-pointer"
-            @click="viewGroupBooks('publisher', publisher.id, publisher.name)"
-          >
-            <h3 class="font-bold text-lg text-gray-800 mb-3">{{ publisher.name }}</h3>
-            <p class="text-sm text-gray-600 mb-3">{{ publisher.bookCount }} book(s)</p>
-            <div v-if="publisher.books && publisher.books.length > 0" class="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-3">
-              <div 
-                v-for="book in publisher.books" 
-                :key="book.id" 
-                class="relative group"
-              >
-                <img
-                  v-if="book.coverUrl"
-                  :src="book.coverUrl"
-                  :alt="book.title"
-                  class="w-full aspect-[2/3] object-cover rounded shadow-sm"
-                />
-                <div v-else class="w-full aspect-[2/3] bg-gray-200 rounded flex items-center justify-center">
-                  <Icon name="library" size="24" class="text-gray-400" />
-                </div>
-                <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition rounded flex items-end p-1">
-                  <p class="text-white text-xs truncate opacity-0 group-hover:opacity-100 transition">{{ book.title }}</p>
-                </div>
-              </div>
-            </div>
-            <button class="w-full text-green-600 hover:text-green-700 text-sm font-medium">
-              → View All Books
-            </button>
-          </div>
+            :name="publisher.name"
+            :book-count="publisher.bookCount"
+            :books="publisher.books"
+            button-class="text-green-600 hover:text-green-700"
+            @click-card="viewGroupBooks('publisher', publisher.id, publisher.name)"
+            @click-book="navigateToBook"
+          />
         </div>
         <div v-else class="text-center py-8 bg-gray-50 rounded">
           <p class="text-gray-500">No publishers found</p>
@@ -126,38 +82,16 @@
           <p class="text-sm text-gray-600 mt-1">{{ filteredSeries.length }} series(ies)</p>
         </div>
         <div v-if="filteredSeries.length > 0" class="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-          <div
+          <GroupCard
             v-for="s in filteredSeries"
             :key="s.id"
-            class="border rounded-lg p-4 bg-white hover:shadow-lg transition cursor-pointer"
-            @click="viewGroupBooks('series', s.id, s.name)"
-          >
-            <h3 class="font-bold text-lg text-gray-800 mb-3">{{ s.name }}</h3>
-            <p class="text-sm text-gray-600 mb-3">{{ s.bookCount }} book(s)</p>
-            <div v-if="s.books && s.books.length > 0" class="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-3">
-              <div 
-                v-for="book in s.books" 
-                :key="book.id" 
-                class="relative group"
-              >
-                <img
-                  v-if="book.coverUrl"
-                  :src="book.coverUrl"
-                  :alt="book.title"
-                  class="w-full aspect-[2/3] object-cover rounded shadow-sm"
-                />
-                <div v-else class="w-full aspect-[2/3] bg-gray-200 rounded flex items-center justify-center">
-                  <Icon name="library" size="24" class="text-gray-400" />
-                </div>
-                <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition rounded flex items-end p-1">
-                  <p class="text-white text-xs truncate opacity-0 group-hover:opacity-100 transition">{{ book.title }}</p>
-                </div>
-              </div>
-            </div>
-            <button class="w-full text-purple-600 hover:text-purple-700 text-sm font-medium">
-              → View All Books
-            </button>
-          </div>
+            :name="s.name"
+            :book-count="s.bookCount"
+            :books="s.books"
+            button-class="text-purple-600 hover:text-purple-700"
+            @click-card="viewGroupBooks('series', s.id, s.name)"
+            @click-book="navigateToBook"
+          />
         </div>
         <div v-else class="text-center py-8 bg-gray-50 rounded">
           <p class="text-gray-500">No series found</p>
@@ -260,6 +194,7 @@ import { useRouter } from 'vue-router';
 import Icon from '@/components/icons.vue';
 import Pulldown from '@/components/ui/Pulldown.vue';
 import SearchBar from '@/components/SearchBar.vue';
+import GroupCard from '@/components/GroupCard.vue';
 
 const router = useRouter();
 const isLoading = ref(false);
@@ -274,23 +209,50 @@ const selectedGroupType = ref<'authors' | 'publishers' | 'series'>('authors');
 
 const filteredAuthors = computed(() => {
   if (!searchQuery.value) return authors.value;
-  return authors.value.filter(a => 
-    a.name.toLowerCase().includes(searchQuery.value.toLowerCase())
-  );
+  const query = searchQuery.value.toLowerCase();
+  return authors.value.filter(a => {
+    // 著者名で検索
+    if (a.name.toLowerCase().includes(query)) return true;
+    
+    // 著者の本のタイトルで検索
+    if (a.books && a.books.length > 0) {
+      return a.books.some(book => book.title.toLowerCase().includes(query));
+    }
+    
+    return false;
+  });
 });
 
 const filteredPublishers = computed(() => {
   if (!searchQuery.value) return publishers.value;
-  return publishers.value.filter(p => 
-    p.name.toLowerCase().includes(searchQuery.value.toLowerCase())
-  );
+  const query = searchQuery.value.toLowerCase();
+  return publishers.value.filter(p => {
+    // 出版社名で検索
+    if (p.name.toLowerCase().includes(query)) return true;
+    
+    // 出版社の本のタイトルで検索
+    if (p.books && p.books.length > 0) {
+      return p.books.some(book => book.title.toLowerCase().includes(query));
+    }
+    
+    return false;
+  });
 });
 
 const filteredSeries = computed(() => {
   if (!searchQuery.value) return series.value;
-  return series.value.filter(s => 
-    s.name.toLowerCase().includes(searchQuery.value.toLowerCase())
-  );
+  const query = searchQuery.value.toLowerCase();
+  return series.value.filter(s => {
+    // シリーズ名で検索
+    if (s.name.toLowerCase().includes(query)) return true;
+    
+    // シリーズの本のタイトルで検索
+    if (s.books && s.books.length > 0) {
+      return s.books.some(book => book.title.toLowerCase().includes(query));
+    }
+    
+    return false;
+  });
 });
 
 const handleSearch = ({ text }) => {

@@ -25,56 +25,39 @@
     <!-- コレクション一覧（シンプルグリッド） -->
     <div v-else-if="filteredCollections.length > 0">
       <div class="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-        <div
+        <GroupCard
           v-for="collection in filteredCollections"
           :key="collection.id"
-          class="border rounded-lg p-4 bg-white hover:shadow-lg transition cursor-pointer"
-          @click="selectCollection(collection.id)"
+          :name="collection.name"
+          :book-count="collection.books?.length || 0"
+          :description="collection.description"
+          :books="collection.books"
+          @click-card="selectCollection(collection.id)"
+          @click-book="navigateToBook"
         >
-          <h3 class="font-bold text-lg text-gray-800 mb-2">{{ collection.name }}</h3>
-          <p class="text-sm text-gray-600 mb-2">{{ collection.books?.length || 0 }} book(s)</p>
-          <p v-if="collection.description" class="text-sm text-gray-600 mb-3 line-clamp-2">{{ collection.description }}</p>
-          <div v-if="collection.books && collection.books.length > 0" class="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-3">
-            <div 
-              v-for="book in collection.books.slice(0, 5)" 
-              :key="book.id" 
-              class="relative group"
-            >
-              <img
-                v-if="book.coverUrl"
-                :src="book.coverUrl"
-                :alt="book.title"
-                class="w-full aspect-[2/3] object-cover rounded shadow-sm"
-              />
-              <div v-else class="w-full aspect-[2/3] bg-gray-200 rounded flex items-center justify-center">
-                <Icon name="library" size="24" class="text-gray-400" />
-              </div>
-              <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition rounded flex items-end p-1">
-                <p class="text-white text-xs truncate opacity-0 group-hover:opacity-100 transition">{{ book.title }}</p>
-              </div>
+          <template #actions>
+            <div class="flex gap-2">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                @click.stop="editCollection(collection)"
+                class="text-xs flex-1"
+              >
+                <Icon name="edit" size="14" class="mr-1" />
+                Edit
+              </Button>
+              <Button 
+                variant="destructive" 
+                size="sm" 
+                @click.stop="deleteCollection(collection.id)"
+                class="text-xs flex-1"
+              >
+                <Icon name="trash" size="14" class="mr-1" />
+                Delete
+              </Button>
             </div>
-          </div>
-          <div class="flex gap-2">
-            <Button 
-              variant="outline" 
-              size="sm" 
-              @click.stop="editCollection(collection)"
-              class="text-xs flex-1"
-            >
-              <Icon name="edit" size="14" class="mr-1" />
-              Edit
-            </Button>
-            <Button 
-              variant="destructive" 
-              size="sm" 
-              @click.stop="deleteCollection(collection.id)"
-              class="text-xs flex-1"
-            >
-              <Icon name="trash" size="14" class="mr-1" />
-              Delete
-            </Button>
-          </div>
-        </div>
+          </template>
+        </GroupCard>
       </div>
     </div>
 
@@ -287,6 +270,7 @@ import AlertDialog from '@/components/ui/AlertDialog.vue';
 import Icon from '@/components/icons.vue';
 import Pulldown from '@/components/ui/Pulldown.vue';
 import SearchBar from '@/components/SearchBar.vue';
+import GroupCard from '@/components/GroupCard.vue';
 
 const router = useRouter();
 const collections = ref([]);
@@ -305,10 +289,22 @@ const formData = ref({
 
 const filteredCollections = computed(() => {
   if (!searchQuery.value) return collections.value;
-  return collections.value.filter(c => 
-    c.name.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-    (c.description && c.description.toLowerCase().includes(searchQuery.value.toLowerCase()))
-  );
+  const query = searchQuery.value.toLowerCase();
+  return collections.value.filter(c => {
+    // コレクション名と説明で検索
+    if (c.name.toLowerCase().includes(query)) return true;
+    if (c.description && c.description.toLowerCase().includes(query)) return true;
+    
+    // コレクション内の本のタイトルで検索
+    if (c.books && c.books.length > 0) {
+      return c.books.some(book => 
+        book.title.toLowerCase().includes(query) ||
+        (book.authors && book.authors.some(a => a.author?.name.toLowerCase().includes(query)))
+      );
+    }
+    
+    return false;
+  });
 });
 
 const handleSearch = ({ text }) => {

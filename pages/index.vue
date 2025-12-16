@@ -40,7 +40,7 @@
       </div>
     </div>
 
-    <BookShelf :books="fetchedBooks" :layout="layout" :selected-books="selectedBooks" @toggle-select="toggleBookSelection" />
+    <BookShelf :books="fetchedBooks" :layout="layout" :selected-books="selectedBooks" @toggle-select="toggleBookSelection" @book-deleted="handleBookDeleted" />
 
     <PageNation
       :total-pages="Math.ceil(totalItems / itemsPerPage)"
@@ -188,6 +188,15 @@ const toggleBookSelection = (bookId) => {
 
 const clearSelection = () => {
   selectedBooks.value.clear();
+};
+
+const handleBookDeleted = (bookId) => {
+  // 削除された書籍を選択状態から除外
+  if (selectedBooks.value.has(bookId)) {
+    selectedBooks.value.delete(bookId);
+  }
+  // データを再取得
+  refresh();
 };
 
 const loadCollectionsAndTags = async () => {

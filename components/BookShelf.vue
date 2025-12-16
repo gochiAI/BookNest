@@ -7,6 +7,7 @@
       :layout="layout"
       :is-selected="selectedBooks.has(book.id)"
       @toggle-select="$emit('toggle-select', book.id)"
+      @book-deleted="$emit('book-deleted', $event)"
     />
   </div>
 </template>
@@ -29,7 +30,7 @@ defineProps({
   },
 });
 
-defineEmits(['toggle-select']);
+defineEmits(['toggle-select', 'book-deleted']);
 </script>
 
 <style scoped>
