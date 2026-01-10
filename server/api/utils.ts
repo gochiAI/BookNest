@@ -27,7 +27,10 @@ export async function validateBookData(data: any): Promise<void> {
     readStatus, 
     volume, 
     isbn, 
-    releaseDate 
+    releaseDate,
+    rating,
+    reviewComment,
+    completedDate
   } = data;
 
   // 1. タイトル (必須)
@@ -80,4 +83,21 @@ export async function validateBookData(data: any): Promise<void> {
   
   // volumeSuffix は String? なので特段の形式チェックは不要ですが、
   // 必要であればここで文字数制限などを入れます。
+
+  // 9. 評価 (任意: 1-5 の整数)
+  if (rating !== undefined && rating !== null) {
+    if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
+      throw new Error('Rating must be an integer between 1 and 5');
+    }
+  }
+
+  // 10. レビューコメント (任意: 文字列)
+  if (reviewComment && typeof reviewComment !== 'string') {
+    throw new Error('Review comment must be a string');
+  }
+
+  // 11. 読了日 (任意)
+  if (completedDate && isNaN(Date.parse(completedDate))) {
+    throw new Error('Invalid completed date format');
+  }
 }

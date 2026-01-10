@@ -43,6 +43,11 @@ export interface BookStorage {
   createBook(book: SaveBookInput): Promise<Book>;          // 更新
   updateBook(id: string, book: SaveBookInput): Promise<Book>; // 更新
   deleteBook(id: string): Promise<void>;
+
+  findExistingBooks(queries: Array<{ isbn?: string | null; title?: string; volume?: number | null }>): Promise<{
+    existingIsbns: string[];
+    existingTitleVolumes: Array<{ title: string; volume: number | null; id: string }>;
+  }>;
   
   // Collection管理
   getCollections(): Promise<Collection[]>;

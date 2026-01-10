@@ -311,6 +311,52 @@ export class PrismaBookStorage implements BookStorage {
     await prisma.book.delete({ where: { id } });
   }
 
+  async findExistingBooks(queries: Array<{ isbn?: string | null; title?: string; volume?: number | null }>): Promise<{
+    existingIsbns: string[];
+    existingTitleVolumes: Array<{ title: string; volume: number | null; id: string }>;
+  }> {
+    const isbnList = Array.from(
+      new Set(
+        queries
+          .map((q) => q.isbn?.trim())
+          .filter((isbn): isbn is string => !!isbn)
+      )
+    );
+
+    const titleVolumeList = queries
+      .map((q) => ({ title: q.title?.trim(), volume: q.volume ?? null }))
+      .filter((q) => !!q.title);
+
+    const result = {
+      existingIsbns: [] as string[],
+      existingTitleVolumes: [] as Array<{ title: string; volume: number | null; id: string }>,
+    };
+
+    if (isbnList.length > 0) {
+      const byIsbn = await prisma.book.findMany({
+        where: { isbn: { in: isbnList } },
+        select: { isbn: true },
+      });
+      result.existingIsbns = byIsbn.map((b) => b.isbn!).filter(Boolean);
+    }
+
+    if (titleVolumeList.length > 0) {
+      const byTitleVolume = await prisma.book.findMany({
+        where: {
+          OR: titleVolumeList.map((q) => ({ title: q.title as string, volume: q.volume })),
+        },
+        select: { id: true, title: true, volume: true },
+      });
+      result.existingTitleVolumes = byTitleVolume.map((b) => ({
+        id: b.id,
+        title: b.title,
+        volume: b.volume ?? null,
+      }));
+    }
+
+    return result;
+  }
+
   // ========================================================================
   // 📂 Collection Methods
   // ========================================================================

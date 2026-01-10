@@ -123,6 +123,14 @@
             </p>
           </div>
         </div>
+        <!-- レビュー & 評価 -->
+        <BookReview
+          :book-id="bookId"
+          :rating="book?.rating"
+          :review-comment="book?.reviewComment"
+          :completed-date="book?.completedDate"
+          @update="handleReviewUpdate"
+        />
       </div>
     </div>
 
@@ -183,6 +191,7 @@ import { useRoute, useRouter } from 'vue-router';
 import Button from '@/components/ui/Button.vue';
 import Icon from '@/components/icons.vue';
 import AlertDialog from '@/components/ui/AlertDialog.vue';
+import BookReview from '@/components/ui/BookReview.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -218,6 +227,31 @@ const loadBook = async () => {
   } catch (error) {
     console.error('Error loading book:', error);
     alert('Failed to load book');
+  }
+};
+
+const handleReviewUpdate = async (data) => {
+  try {
+    const response = await fetch('/api/bookCrud', {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-book-id': String(bookId.value),
+      },
+      body: JSON.stringify({
+        ...book.value,
+        rating: data.rating,
+        reviewComment: data.reviewComment,
+        completedDate: data.completedDate,
+      }),
+    });
+
+    if (!response.ok) throw new Error('Failed to update review');
+    await loadBook();
+    alert('レビューが保存されました');
+  } catch (error) {
+    console.error('Error updating review:', error);
+    alert('レビューの保存に失敗しました');
   }
 };
 

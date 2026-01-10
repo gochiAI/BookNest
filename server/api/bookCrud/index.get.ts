@@ -1,5 +1,5 @@
 import { defineEventHandler, createError } from 'h3';
-import { getStorage } from './utils';
+import { getStorage } from '../utils';
 
 export default defineEventHandler(async (event) => {
   const storageType = (event.node.req.headers['x-storage-type'] as string) || 'prisma';

@@ -6,7 +6,9 @@
     </h1>
     <form @submit.prevent="handleSubmit" class="grid gap-4">
       <div>
-        <label for="title" class="text-sm font-medium leading-none">Title</label>
+        <label for="title" class="text-sm font-medium leading-none">Title
+          <span v-if="isRequired('title')" class="text-red-500 ml-1">*</span>
+        </label>
         <TitleSuggestions
           id="title"
           :model-value="title"
@@ -17,7 +19,9 @@
         />
       </div>
       <div>
-        <label for="author" class="text-sm font-medium leading-none">Author</label>
+        <label for="author" class="text-sm font-medium leading-none">Author
+          <span v-if="isRequired('authorNames')" class="text-red-500 ml-1">*</span>
+        </label>
         <AutoComplete
           id="author"
           :model-value="author"
@@ -27,7 +31,9 @@
         />
       </div>
       <div>
-        <label for="publisher" class="text-sm font-medium leading-none">Publisher</label>
+        <label for="publisher" class="text-sm font-medium leading-none">Publisher
+          <span v-if="isRequired('publisherName')" class="text-red-500 ml-1">*</span>
+        </label>
         <AutoComplete
           id="publisher"
           :model-value="publisher"
@@ -37,7 +43,10 @@
         />
       </div>
       <div>
-        <label for="series" class="text-sm font-medium leading-none">Series</label>
+        <label for="series" class="text-sm font-medium leading-none">Series
+          <span v-if="isRequired('seriesName')" class="text-red-500 ml-1">*
+          </span>
+        </label>
         <AutoComplete
           id="series"
           :model-value="series"
@@ -47,7 +56,9 @@
         />
       </div>
       <div>
-        <label for="isbn" class="text-sm font-medium leading-none">ISBN</label>
+        <label for="isbn" class="text-sm font-medium leading-none">ISBN
+          <span v-if="isRequired('isbn')" class="text-red-500 ml-1">*</span>
+        </label>
         <input
           type="text"
           id="isbn"
@@ -58,7 +69,9 @@
         />
       </div>
       <div>
-        <label for="releaseDate" class="text-sm font-medium leading-none">Release Date</label>
+        <label for="releaseDate" class="text-sm font-medium leading-none">Release Date
+          <span v-if="isRequired('releaseDate')" class="text-red-500 ml-1">*</span>
+        </label>
         <input
           type="date"
           id="releaseDate"
@@ -67,7 +80,10 @@
         />
       </div>
       <div>
-        <label for="volume" class="text-sm font-medium leading-none">Volume</label>
+        <label for="volume" class="text-sm font-medium leading-none">Volume
+          <span v-if="isRequired('volume')" class="text-red-500 ml-1">*
+          </span>
+        </label>
         <input
           type="number"
           id="volume"
@@ -77,7 +93,10 @@
         />
       </div>
       <div>
-        <label for="readStatus" class="text-sm font-medium leading-none">readStatus</label>
+        <label for="readStatus" class="text-sm font-medium leading-none">readStatus
+          <span v-if="isRequired('readStatus')" class="text-red-500 ml-1">*
+          </span>
+        </label>
         <select v-model="readStatus" class="border rounded-md px-3 py-2 w-full">
           <option value="" disabled>Select readStatus</option>
           <option v-for="status in readStatusOptions" :key="status.value" :value="status.value">
@@ -86,7 +105,10 @@
         </select>
       </div>
       <div>
-        <label for="bookType" class="text-sm font-medium leading-none">bookType</label>
+        <label for="bookType" class="text-sm font-medium leading-none">bookType
+          <span v-if="isRequired('bookType')" class="text-red-500 ml-1">*
+          </span>
+        </label>
         <select v-model="bookType" class="border rounded-md px-3 py-2 w-full">
           <option value="" disabled>Select bookType</option>
           <option v-for="bookType in bookTypeOptions" :key="bookType.value" :value="bookType.value">
@@ -96,7 +118,7 @@
       </div>
       <div class="flex gap-4">
         <!-- Submitボタン -->
-        <Button type="submit" variant="secondary">
+        <Button type="submit" variant="secondary" :disabled="!isValidRequired">
           {{ isEditMode ? "Update Book" : "Add Book" }}
         </Button>
         <!-- キャンセルボタン -->
@@ -109,7 +131,7 @@
 </template>
 
 <script>
-import { ref, onMounted } from "vue";
+import { ref, onMounted, computed } from "vue";
 import { useRouter } from "vue-router";
 import Button from "@/components/ui/Button.vue";
 import AutoComplete from "@/components/AutoComplete.vue";
@@ -135,6 +157,33 @@ export default {
     const bookType = ref("");
     const volume = ref(null);
     const isEditMode = ref(false); // 編集モードかどうかを判定
+    const customization = ref(null);
+    const requiredOnCreate = computed(() => customization.value?.registration?.requiredOnCreate || []);
+    const isRequired = (key) => requiredOnCreate.value.includes(key);
+
+    const isValidRequired = computed(() => {
+      // Map UI fields to config keys
+      const required = new Set(requiredOnCreate.value);
+      // title
+      if (required.has('title') && (!title.value || title.value.trim() === '')) return false;
+      // authorNames
+      if (required.has('authorNames') && (!author.value || author.value.trim() === '')) return false;
+      // bookType
+      if (required.has('bookType') && (!bookType.value || bookType.value.trim() === '')) return false;
+      // readStatus
+      if (required.has('readStatus') && (!readStatus.value || readStatus.value.trim() === '')) return false;
+      // publisherName
+      if (required.has('publisherName') && (!publisher.value || publisher.value.trim() === '')) return false;
+      // seriesName
+      if (required.has('seriesName') && (!series.value || series.value.trim() === '')) return false;
+      // isbn
+      if (required.has('isbn') && (!isbn.value || isbn.value.trim() === '')) return false;
+      // releaseDate
+      if (required.has('releaseDate') && (!releaseDate.value || releaseDate.value.trim() === '')) return false;
+      // volume (number)
+      if (required.has('volume') && (volume.value === null || volume.value === undefined)) return false;
+      return true;
+    });
 
     // 本の種類のオプション
     const bookTypeOptions = Object.values(BookType).map((type) => ({
@@ -218,8 +267,19 @@ export default {
       return `${year}-${month}-${day}`;
     };
 
+    const loadCustomization = async () => {
+      try {
+        const res = await fetch('/api/settings/customization');
+        const json = await res.json();
+        customization.value = json.data;
+      } catch (e) {
+        customization.value = null;
+      }
+    };
+
     // 編集モードの場合、既存のデータを取得
     onMounted(async () => {
+      await loadCustomization();
       const bookId = sessionStorage.getItem("x-book-id");
       if (bookId) {
         isEditMode.value = true;
@@ -246,6 +306,11 @@ export default {
     });
 
     const handleSubmit = async () => {
+      // Client-side guard using customization
+      if (!isValidRequired.value) {
+        alert('必須項目を入力してください');
+        return;
+      }
       const newBook = {
         title: title.value,
         authorNames: author.value ? [author.value] : [],
@@ -309,6 +374,9 @@ export default {
       handleSubmit,
       cancel,
       isEditMode,
+      customization,
+      isRequired,
+      isValidRequired,
       handleTitleInput,
       handleSelectTitleSuggestion,
       handleAuthorInput,

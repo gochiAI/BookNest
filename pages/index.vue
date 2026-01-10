@@ -34,6 +34,10 @@
           <Icon name="tag" size="16" class="mr-1" />
           Add Tag
         </Button>
+        <Button variant="danger" size="sm" @click="deleteSelectedBooks">
+          <Icon name="trash" size="16" class="mr-1" />
+          Delete
+        </Button>
         <Button variant="outline" size="sm" @click="clearSelection">
           Clear Selection
         </Button>
@@ -104,6 +108,16 @@
         </Button>
       </template>
     </AlertDialog>
+
+    <!-- 書籍アップロードコンポーネント（削除済み） -->
+    <Button 
+      variant="primary" 
+      class="fixed bottom-4 right-4"
+      @click="showBookUpload = true"
+    >
+      <Icon name="plus" size="16" class="mr-1" />
+      Add New Book
+    </Button>
   </div>
 </template>
 
@@ -138,6 +152,7 @@ const showBatchCollectionDialog = ref(false);
 const showBatchTagDialog = ref(false);
 const selectedCollection = ref("");
 const selectedTag = ref("");
+const showBookUpload = ref(false);
 
 const handleSearch = ({ text, type }) => {
   filters.value.searchType = type;
@@ -197,6 +212,32 @@ const handleBookDeleted = (bookId) => {
   }
   // データを再取得
   refresh();
+};
+
+const deleteSelectedBooks = async () => {
+  if (selectedBooks.value.size === 0) return;
+  if (!confirm(`${selectedBooks.value.size}冊の書籍を削除します。よろしいですか？`)) return;
+  try {
+    const bookIds = Array.from(selectedBooks.value);
+    const results = await Promise.all(
+      bookIds.map(bookId =>
+        fetch(`/api/books/${bookId}`, {
+          method: 'DELETE',
+        })
+      )
+    );
+    const allSuccess = results.every(res => res.ok);
+    if (allSuccess) {
+      alert(`${bookIds.length}冊の書籍を削除しました。`);
+    } else {
+      alert('一部の書籍の削除に失敗しました。');
+    }
+    selectedBooks.value.clear();
+    refresh();
+  } catch (error) {
+    console.error('Error deleting books:', error);
+    alert('書籍の削除中にエラーが発生しました。');
+  }
 };
 
 const loadCollectionsAndTags = async () => {
@@ -278,6 +319,11 @@ const addBooksTag = async () => {
     console.error('Error adding tag to books:', error);
     alert('Error adding tag to books');
   }
+};
+
+const handleUploadSuccess = () => {
+  // アップロード成功時の処理
+  refresh();
 };
 
 onMounted(() => {

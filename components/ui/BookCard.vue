@@ -11,6 +11,10 @@
                 <div>
                     <h3 class="text-lg font-bold">{{ book.title }} - {{ book.volume }}</h3>
                     <p class="text-sm text-muted-foreground">By {{ authorNames }}</p>
+                                    <div v-if="book.rating" class="flex items-center gap-1 mt-1">
+                                        <span class="text-yellow-400">{{ '★'.repeat(book.rating) }}{{ '☆'.repeat(5 - book.rating) }}</span>
+                                        <span class="text-xs text-gray-600">{{ book.rating }}/5</span>
+                                    </div>
                 </div>
             </div>
         </template>

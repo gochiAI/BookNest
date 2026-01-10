@@ -10,15 +10,15 @@
     <!-- サイドパネル -->
     <aside
       :class="[
-        'fixed md:relative z-50 h-screen w-64 bg-white border-r shadow-lg md:shadow-none transition-transform duration-300 ease-in-out',
-        isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0',
+        'fixed md:sticky z-50 h-screen w-64 bg-white border-r shadow-lg md:shadow-none transition-transform duration-300 ease-in-out',
+        isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0 md:w-0 md:border-r-0 md:overflow-hidden',
       ]"
     >
       <!-- ヘッダー -->
-      <div class="p-6 border-b flex items-center justify-between">
+      <div class="p-6 border-b relative">
         <h2 class="text-xl font-bold">BookNest</h2>
         <button
-          class="md:hidden text-gray-600 hover:text-gray-900"
+          class="absolute top-4 right-4 text-gray-600 hover:text-gray-900 transition-colors"
           @click="toggleSidebar"
         >
           <Icon name="close" size="24" />
@@ -57,9 +57,26 @@
           @click="closeSidebar"
         />
         <SidebarLink
+          to="/upload"
+          :icon="'upload'"
+          label="Upload Books"
+          @click="closeSidebar"
+        />
+        <SidebarLink
           to="/about"
           :icon="'info'"
           label="About"
+          @click="closeSidebar"
+        />
+
+        <!-- 区切り線 -->
+        <div class="my-4 border-t" />
+
+        <!-- 設定 -->
+        <SidebarLink
+          to="/settings"
+          :icon="'settings'"
+          label="Settings"
           @click="closeSidebar"
         />
       </nav>
@@ -83,7 +100,7 @@
       <header class="bg-white border-b shadow-sm">
         <div class="px-4 py-4 flex items-center justify-between">
           <button
-            class="md:hidden text-gray-600 hover:text-gray-900"
+            class="text-gray-600 hover:text-gray-900 transition-colors"
             @click="toggleSidebar"
           >
             <Icon name="menu" size="24" />
@@ -126,12 +143,3 @@ const handleNewBook = () => {
   closeSidebar();
 };
 </script>
-
-<style scoped>
-/* レスポンシブ対応 */
-@media (min-width: 768px) {
-  :deep(main) {
-    width: calc(100% - 16rem);
-  }
-}
-</style>

@@ -29,6 +29,7 @@ import {
   Library,
   Menu,
   Moon,
+  Plus,
   Search,
   Settings,
   Sun,
@@ -36,6 +37,9 @@ import {
   Trash,
   Upload,
   X,
+  Book,
+  Users,
+  Building2,
 } from "lucide-vue-next";
 
 const icons = {
@@ -63,6 +67,7 @@ const icons = {
   library: Library,
   light: Sun,
   menu: Menu,
+  plus: Plus,
   readstatus: BookOpenCheck,
   right: ArrowRight,
   search: Search,
@@ -71,7 +76,9 @@ const icons = {
   tag: Tag,
   trash: Trash,
   upload: Upload,
-
+  book: Book,
+  users: Users,
+  building2: Building2,
 };
 
 /**

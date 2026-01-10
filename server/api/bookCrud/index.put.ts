@@ -1,5 +1,5 @@
 import { defineEventHandler, readBody, createError } from 'h3';
-import { validateBookData, getStorage } from './utils';
+import { validateBookData, getStorage } from '../utils';
 
 export default defineEventHandler(async (event) => {
   const storageType = (event.node.req.headers['x-storage-type'] as string) || 'prisma';

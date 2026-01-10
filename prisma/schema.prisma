@@ -23,6 +23,11 @@ model Book {
   publisherId  String?
   seriesId     String?
   
+  // レビュー・評価フィールド
+  rating       Int?      // 1-5の評価
+  reviewComment String?  // レビューコメント
+  completedDate DateTime? // 読了日
+  
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
