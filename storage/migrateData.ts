@@ -1,4 +1,3 @@
-import { BookStorage } from '~/interfaces/BookStorage';
 import { PrismaBookStorage } from '~/storage/PrismaBookStorage';
 import { JsonBookStorage } from '~/storage/JsonBookStorage';
 import { CsvBookStorage } from '~/storage/CsvBookStorage';
@@ -6,7 +5,13 @@ import { MongoBookStorage } from '~/storage/MongoBookStorage';
 import fs from 'fs/promises';
 import path from 'path';
 
-const storageMap = {
+type StorageType = 'prisma' | 'json' | 'csv' | 'mongo';
+type MigratableStorage = {
+  getBooks: (params: { page?: number; itemsPerPage?: number }) => Promise<{ books: Array<Record<string, unknown>> }>;
+  createBook: (book: Record<string, unknown>) => Promise<unknown>;
+};
+
+const storageMap: Record<StorageType, new () => MigratableStorage> = {
   prisma: PrismaBookStorage,
   json: JsonBookStorage,
   csv: CsvBookStorage,
@@ -29,7 +34,7 @@ async function getBackupVersion(): Promise<number> {
   }
 }
 
-export async function migrateData(sourceType: string, targetType: string) {
+export async function migrateData(sourceType: StorageType, targetType: StorageType) {
   const SourceStorage = storageMap[sourceType];
   const TargetStorage = storageMap[targetType];
 
@@ -37,10 +42,10 @@ export async function migrateData(sourceType: string, targetType: string) {
     throw new Error('Invalid storage type');
   }
 
-  const sourceStorage: BookStorage = new SourceStorage();
-  const targetStorage: BookStorage = new TargetStorage();
+  const sourceStorage = new SourceStorage();
+  const targetStorage = new TargetStorage();
 
-  const books = await sourceStorage.getAllBooks();
+  const { books } = await sourceStorage.getBooks({ page: 1, itemsPerPage: Number.MAX_SAFE_INTEGER });
   console.log(`Migrating ${books.length} books from ${sourceType} to ${targetType}`);
   for (const book of books) {
     await targetStorage.createBook(book);

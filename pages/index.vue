@@ -12,20 +12,25 @@
       <div class="w-full flex flex-wrap gap-4 justify-between">
         <div class="flex flex-wrap gap-4">
           <FilterBar v-model:book-type="filters.bookType" v-model:read-status="filters.readStatus" />
-          <SearchBar 
-            v-model="filters.search" 
-            @search="handleSearch"
-            @searchTypeChange="handleSearchTypeChange"
-          />
+          <SearchBar v-model="filters.search" @search="handleSearch" @searchTypeChange="handleSearchTypeChange" />
         </div>
         <OptionsBar v-model:sort-option="sortOption" v-model:layout="layout" />
       </div>
     </div>
 
     <!-- バッチアクションバー -->
-    <div v-if="selectedBooks.size > 0" class="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg flex items-center justify-between gap-2">
-      <span class="text-sm font-medium text-blue-900">{{ selectedBooks.size }} book(s) selected</span>
+    <div v-if="selectedBooks.size > 0"
+      class="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg flex items-center justify-between gap-2">
+      <span class="text-sm font-medium text-blue-900">
+        {{ selectedBooks.size }} book(s) selected
+        <span v-if="isBatchCoverFetching" class="ml-2">
+          (Cover: {{ batchCoverDone }}/{{ batchCoverTotal }})
+        </span>
+      </span>
       <div class="flex gap-2">
+        <Button variant="secondary" size="sm" @click="fetchCoversForSelectedBooks" :disabled="isBatchCoverFetching">
+          {{ isBatchCoverFetching ? 'Fetching Covers...' : 'Fetch Covers' }}
+        </Button>
         <Button variant="secondary" size="sm" @click="showBatchCollectionDialog = true">
           <Icon name="library" size="16" class="mr-1" />
           Add to Collection
@@ -44,12 +49,10 @@
       </div>
     </div>
 
-    <BookShelf :books="fetchedBooks" :layout="layout" :selected-books="selectedBooks" @toggle-select="toggleBookSelection" @book-deleted="handleBookDeleted" />
+    <BookShelf :books="fetchedBooks" :layout="layout" :selected-books="selectedBooks"
+      @toggle-select="toggleBookSelection" @book-deleted="handleBookDeleted" />
 
-    <PageNation
-      :total-pages="Math.ceil(totalItems / itemsPerPage)"
-      v-model:current-page="currentPage"
-    />
+    <PageNation :total-pages="Math.ceil(totalItems / itemsPerPage)" v-model:current-page="currentPage" />
 
     <!-- バッチコレクション追加ダイアログ -->
     <AlertDialog v-model="showBatchCollectionDialog">
@@ -59,11 +62,7 @@
           <p class="text-sm text-gray-600">Add {{ selectedBooks.size }} book(s) to a collection</p>
           <div>
             <label for="collection" class="block text-sm font-medium mb-2">Select Collection</label>
-            <select 
-              id="collection"
-              v-model="selectedCollection"
-              class="w-full border rounded-md px-3 py-2 text-sm"
-            >
+            <select id="collection" v-model="selectedCollection" class="w-full border rounded-md px-3 py-2 text-sm">
               <option value="">-- Select a collection --</option>
               <option v-for="collection in availableCollections" :key="collection.id" :value="collection.id">
                 {{ collection.name }}
@@ -88,11 +87,7 @@
           <p class="text-sm text-gray-600">Add tag(s) to {{ selectedBooks.size }} book(s)</p>
           <div>
             <label for="tag" class="block text-sm font-medium mb-2">Select Tag</label>
-            <select 
-              id="tag"
-              v-model="selectedTag"
-              class="w-full border rounded-md px-3 py-2 text-sm"
-            >
+            <select id="tag" v-model="selectedTag" class="w-full border rounded-md px-3 py-2 text-sm">
               <option value="">-- Select a tag --</option>
               <option v-for="tag in availableTags" :key="tag.id" :value="tag.id">
                 {{ tag.name }}
@@ -110,11 +105,7 @@
     </AlertDialog>
 
     <!-- 書籍アップロードコンポーネント（削除済み） -->
-    <Button 
-      variant="primary" 
-      class="fixed bottom-4 right-4"
-      @click="showBookUpload = true"
-    >
+    <Button variant="primary" class="fixed bottom-4 right-4" @click="showBookUpload = true">
       <Icon name="plus" size="16" class="mr-1" />
       Add New Book
     </Button>
@@ -153,6 +144,9 @@ const showBatchTagDialog = ref(false);
 const selectedCollection = ref("");
 const selectedTag = ref("");
 const showBookUpload = ref(false);
+const isBatchCoverFetching = ref(false);
+const batchCoverTotal = ref(0);
+const batchCoverDone = ref(0);
 
 const handleSearch = ({ text, type }) => {
   filters.value.searchType = type;
@@ -220,9 +214,11 @@ const deleteSelectedBooks = async () => {
   try {
     const bookIds = Array.from(selectedBooks.value);
     const results = await Promise.all(
-      bookIds.map(bookId =>
-        fetch(`/api/books/${bookId}`, {
+      bookIds.map(id =>
+        fetch(`/api/bookCrud`, {
           method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id }),
         })
       )
     );
@@ -238,6 +234,129 @@ const deleteSelectedBooks = async () => {
     console.error('Error deleting books:', error);
     alert('書籍の削除中にエラーが発生しました。');
   }
+};
+
+const normalizeIsbn = (value) => (typeof value === 'string' ? value.replace(/\D/g, '') : '');
+
+const extractAuthorNames = (book) => {
+  if (!Array.isArray(book?.authors)) return [];
+
+  return book.authors
+    .map(entry => entry?.author?.name)
+    .filter(name => typeof name === 'string' && name.trim() !== '')
+    .map(name => name.trim());
+};
+
+const buildUpdatePayloadWithCover = (book, coverUrl) => {
+  const authorNames = extractAuthorNames(book);
+  const normalizedIsbn = normalizeIsbn(book?.isbn);
+
+  return {
+    title: book?.title || '',
+    authorNames: authorNames.length > 0 ? authorNames : ['不明'],
+    bookType: book?.bookType || 'General',
+    readStatus: book?.readStatus || 'Unread',
+    isbn: normalizedIsbn.length === 13 ? normalizedIsbn : undefined,
+    releaseDate: book?.releaseDate ? new Date(book.releaseDate).toISOString() : undefined,
+    volume: Number.isInteger(book?.volume) ? book.volume : undefined,
+    publisherName: book?.publisher?.name || undefined,
+    seriesName: book?.series?.name || undefined,
+    coverUrl,
+  };
+};
+
+const fetchCoversForSelectedBooks = async () => {
+  if (selectedBooks.value.size === 0) return;
+  if (isBatchCoverFetching.value) return;
+
+  const selectedIds = Array.from(selectedBooks.value);
+  isBatchCoverFetching.value = true;
+  batchCoverTotal.value = selectedIds.length;
+  batchCoverDone.value = 0;
+
+  let updatedCount = 0;
+  let notFoundCount = 0;
+  let skippedCount = 0;
+  let failedCount = 0;
+
+  try {
+    for (const bookId of selectedIds) {
+      try {
+        const detailRes = await fetch('/api/bookCrud', {
+          method: 'GET',
+          headers: { 'x-book-id': bookId },
+        });
+        if (!detailRes.ok) {
+          failedCount++;
+          continue;
+        }
+
+        const book = await detailRes.json();
+        const title = (book?.title || '').trim();
+        const isbn = normalizeIsbn(book?.isbn);
+        const volume = Number.isInteger(book?.volume) ? book.volume : undefined;
+
+        if (!title && !isbn) {
+          skippedCount++;
+          continue;
+        }
+
+        const coverRes = await fetch('/api/bookCrud/cover', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            isbn: isbn || undefined,
+            title: title || undefined,
+            volume,
+          }),
+        });
+
+        if (!coverRes.ok) {
+          failedCount++;
+          continue;
+        }
+
+        const coverData = await coverRes.json();
+        if (!coverData?.coverUrl) {
+          notFoundCount++;
+          continue;
+        }
+
+        if (book?.coverUrl === coverData.coverUrl) {
+          skippedCount++;
+          continue;
+        }
+
+        const payload = buildUpdatePayloadWithCover(book, coverData.coverUrl);
+        const updateRes = await fetch('/api/bookCrud', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-book-id': bookId,
+          },
+          body: JSON.stringify(payload),
+        });
+
+        if (updateRes.ok) {
+          updatedCount++;
+        } else {
+          failedCount++;
+        }
+      } catch (error) {
+        failedCount++;
+        console.error(`[cover-batch] failed for book: ${bookId}`, error);
+      } finally {
+        batchCoverDone.value += 1;
+      }
+    }
+  } finally {
+    isBatchCoverFetching.value = false;
+    refresh();
+  }
+
+  alert(
+    `Cover fetch done.\nUpdated: ${updatedCount}\nNot found: ${notFoundCount}\nSkipped: ${skippedCount}\nFailed: ${failedCount}`
+  );
 };
 
 const loadCollectionsAndTags = async () => {

@@ -18,6 +18,10 @@ export type BookWithRelations = Book & {
   tags: Array<{ tag: Tag }>;
 };
 
+export type CollectionWithBooks = Collection & {
+  books?: BookWithRelations[];
+};
+
 // 検索・フィルタリング・ページネーション条件をまとめた型
 export interface GetBooksParams {
   page?: number;
@@ -40,6 +44,7 @@ export interface GetBooksResult {
 
 export interface BookStorage {
   getBooks(params: GetBooksParams): Promise<GetBooksResult>;
+  getBookById?(id: string): Promise<BookWithRelations | null>;
   createBook(book: SaveBookInput): Promise<Book>;          // 更新
   updateBook(id: string, book: SaveBookInput): Promise<Book>; // 更新
   deleteBook(id: string): Promise<void>;
@@ -50,7 +55,8 @@ export interface BookStorage {
   }>;
   
   // Collection管理
-  getCollections(): Promise<Collection[]>;
+  getCollections(): Promise<CollectionWithBooks[]>;
+  getCollectionWithBooks?(collectionId: string): Promise<CollectionWithBooks | null>;
   createCollection(name: string, description?: string): Promise<Collection>;
   updateCollection(id: string, name?: string, description?: string): Promise<Collection>;
   deleteCollection(id: string): Promise<void>;

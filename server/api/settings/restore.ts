@@ -32,10 +32,11 @@ export default defineEventHandler(async (event) => {
     return { message: 'Data restored successfully' };
   } catch (error) {
     console.error('Error restoring data:', error);
+    const message = error instanceof Error ? error.message : 'Unknown error';
     throw createError({
       statusCode: 500,
       statusMessage: 'Internal Server Error',
-      message: error.message,
+      message,
     });
   }
 });

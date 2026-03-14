@@ -12,6 +12,10 @@ export default defineEventHandler(async (event) => {
 
   try {
     if (method === 'GET') {
+      if (!storage.getCollectionWithBooks) {
+        throw createError({ statusCode: 501, message: 'getCollectionWithBooks is not implemented for this storage' });
+      }
+
       // コレクション詳細と関連する本を取得
       const collection = await storage.getCollectionWithBooks(collectionId);
       return { data: collection };

@@ -1,0 +1,21 @@
+{
+  "reviews": {
+    "enabled": true,
+    "maxReviewLength": 500,
+    "enableCompletedDate": true,
+    "requireOnStatus": {
+      "Completed": [
+        "rating",
+        "completedDate"
+      ]
+    }
+  },
+  "registration": {
+    "requiredOnCreate": [
+      "title",
+      "authorNames",
+      "bookType",
+      "readStatus"
+    ]
+  }
+}

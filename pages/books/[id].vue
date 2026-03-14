@@ -26,16 +26,33 @@
 
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
       <!-- 本の基本情報 -->
-      <div class="md:col-span-1">
+      <div class="md:col-span-1 space-y-2">
         <img
           v-if="book?.coverUrl"
-          :src="book.coverUrl"
+          :src="coverPreviewUrl || book.coverUrl"
           :alt="book?.title"
           class="w-full h-auto object-cover rounded-lg shadow-lg"
         />
         <div v-else class="w-full aspect-[3/4] bg-gray-200 rounded-lg flex items-center justify-center">
           <span class="text-gray-500">No Cover</span>
         </div>
+        <Button
+          @click="registerCover"
+          :disabled="coverLoading"
+          variant="outline"
+          class="w-full"
+        >
+          <Icon name="edit" size="16" class="mr-2" />
+          {{ coverLoading ? '書影取得中...' : '書影登録' }}
+        </Button>
+        <Button
+          v-if="coverCandidates.length > 0"
+          @click="showCoverCandidateSelector = true"
+          variant="outline"
+          class="w-full"
+        >
+          候補 {{ coverCandidates.length }}件から選択
+        </Button>
       </div>
 
       <!-- 本の詳細情報 -->
@@ -138,7 +155,26 @@
     <AlertDialog v-model="showAddCollectionDialog">
       <template #title>Add to Collection</template>
       <template #content>
-        <div class="space-y-2 max-h-64 overflow-y-auto">
+        <!-- 新規コレクション作成フォーム -->
+        <div class="mb-4 p-3 border rounded-lg bg-gray-50">
+          <p class="text-xs font-semibold text-gray-600 mb-2">新規コレクションを作成</p>
+          <input
+            v-model="newCollectionName"
+            type="text"
+            placeholder="コレクション名"
+            class="w-full border rounded px-2 py-1 text-sm mb-2"
+            @keydown.enter.prevent="createCollection"
+          />
+          <input
+            v-model="newCollectionDescription"
+            type="text"
+            placeholder="説明（任意）"
+            class="w-full border rounded px-2 py-1 text-sm mb-2"
+            @keydown.enter.prevent="createCollection"
+          />
+          <Button variant="outline" size="sm" :disabled="!newCollectionName.trim()" @click="createCollection">作成</Button>
+        </div>
+        <div class="space-y-2 max-h-48 overflow-y-auto">
           <div
             v-for="collection in availableCollections"
             :key="collection.id"
@@ -164,7 +200,21 @@
     <AlertDialog v-model="showAddTagDialog">
       <template #title>Add Tags</template>
       <template #content>
-        <div class="space-y-2 max-h-64 overflow-y-auto">
+        <!-- 新規タグ作成フォーム -->
+        <div class="mb-4 p-3 border rounded-lg bg-gray-50">
+          <p class="text-xs font-semibold text-gray-600 mb-2">新規タグを作成</p>
+          <div class="flex gap-2">
+            <input
+              v-model="newTagName"
+              type="text"
+              placeholder="タグ名"
+              class="flex-1 border rounded px-2 py-1 text-sm"
+              @keydown.enter.prevent="createTag"
+            />
+            <Button variant="outline" size="sm" :disabled="!newTagName.trim()" @click="createTag">作成</Button>
+          </div>
+        </div>
+        <div class="space-y-2 max-h-48 overflow-y-auto">
           <div
             v-for="tag in availableTags"
             :key="tag.id"
@@ -182,6 +232,47 @@
         <Button variant="outline" @click="showAddTagDialog = false">Close</Button>
       </template>
     </AlertDialog>
+
+    <!-- 書影候補選択モーダル -->
+    <div v-if="showCoverCandidateSelector"
+      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+      @click.self="showCoverCandidateSelector = false">
+      <div class="bg-white rounded-lg shadow-xl max-w-3xl w-full mx-4 max-h-[80vh] overflow-hidden flex flex-col">
+        <div class="p-6 border-b">
+          <h3 class="text-xl font-bold">書影候補を選択してください</h3>
+          <p class="text-sm text-gray-600 mt-1">{{ book?.title }}<span v-if="book?.volume"> Vol.{{ book.volume }}</span></p>
+        </div>
+        <div class="flex-1 overflow-y-auto p-6">
+          <div class="space-y-3">
+            <div
+              v-for="(candidate, index) in coverCandidates"
+              :key="`${candidate.remoteUrl}-${index}`"
+              class="border rounded-lg p-4 transition-colors"
+              :class="isSelectingCoverCandidate ? 'opacity-50 pointer-events-none' : 'hover:bg-gray-50 hover:border-blue-300 cursor-pointer'"
+              @click="selectCoverCandidate(candidate)"
+            >
+              <div class="flex items-start gap-4">
+                <div class="w-14 h-20 rounded border bg-gray-100 overflow-hidden flex items-center justify-center shrink-0">
+                  <img :src="candidate.previewUrl || candidate.remoteUrl" :alt="candidate.title || book?.title" class="w-full h-full object-cover" />
+                </div>
+                <div class="flex-1">
+                  <div class="flex items-center justify-between gap-2">
+                    <p class="font-medium text-sm">{{ candidate.title || book?.title || 'タイトル不明' }}</p>
+                    <span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">{{ candidate.source }}</span>
+                  </div>
+                  <p v-if="candidate.volume" class="text-xs text-gray-600 mt-1">候補巻数: Vol.{{ candidate.volume }}</p>
+                  <p v-if="candidate.isbn" class="text-xs text-gray-600 mt-1">ISBN: {{ candidate.isbn }}</p>
+                  <p v-if="candidate.matchedVolume" class="text-xs text-green-700 mt-1">巻数一致候補</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="p-4 border-t bg-gray-50 flex justify-end">
+          <Button variant="outline" :disabled="isSelectingCoverCandidate" @click="showCoverCandidateSelector = false">閉じる</Button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -201,6 +292,14 @@ const allCollections = ref([]);
 const allTags = ref([]);
 const showAddCollectionDialog = ref(false);
 const showAddTagDialog = ref(false);
+const coverLoading = ref(false);
+const coverPreviewUrl = ref('');
+const coverCandidates = ref([]);
+const showCoverCandidateSelector = ref(false);
+const isSelectingCoverCandidate = ref(false);
+const newTagName = ref('');
+const newCollectionName = ref('');
+const newCollectionDescription = ref('');
 
 const bookId = computed(() => route.params.id);
 
@@ -277,6 +376,47 @@ const loadTags = async () => {
   }
 };
 
+const createTag = async () => {
+  const name = newTagName.value.trim();
+  if (!name) return;
+  try {
+    const response = await fetch('/api/tags', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name }),
+    });
+    if (!response.ok) throw new Error('Failed to create tag');
+    const result = await response.json();
+    newTagName.value = '';
+    await loadTags();
+    await addTag(result.data.id);
+  } catch (error) {
+    console.error('Error creating tag:', error);
+    alert('タグの作成に失敗しました');
+  }
+};
+
+const createCollection = async () => {
+  const name = newCollectionName.value.trim();
+  if (!name) return;
+  try {
+    const response = await fetch('/api/collections', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, description: newCollectionDescription.value.trim() || undefined }),
+    });
+    if (!response.ok) throw new Error('Failed to create collection');
+    const result = await response.json();
+    newCollectionName.value = '';
+    newCollectionDescription.value = '';
+    await loadCollections();
+    await addCollection(result.data.id);
+  } catch (error) {
+    console.error('Error creating collection:', error);
+    alert('コレクションの作成に失敗しました');
+  }
+};
+
 const addCollection = async (collectionId) => {
   try {
     const response = await fetch(`/api/books/${bookId.value}/collections`, {
@@ -342,6 +482,81 @@ const removeTag = async (tagId) => {
   } catch (error) {
     console.error('Error removing tag:', error);
     alert('Failed to remove tag');
+  }
+};
+
+const applyCoverUrl = async (coverUrl) => {
+  await fetch('/api/bookCrud', {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-book-id': String(bookId.value),
+    },
+    body: JSON.stringify({ coverUrl }),
+  });
+  book.value.coverUrl = coverUrl;
+  coverPreviewUrl.value = `${coverUrl}${coverUrl.includes('?') ? '&' : '?'}t=${Date.now()}`;
+};
+
+const registerCover = async () => {
+  if (!book.value) return;
+  coverLoading.value = true;
+  try {
+    const res = await fetch('/api/bookCrud/cover', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        title: book.value.title,
+        isbn: book.value.isbn,
+        volume: book.value.volume ?? undefined,
+      }),
+    });
+    const data = await res.json();
+    if (Array.isArray(data?.candidates) && data.candidates.length > 0) {
+      coverCandidates.value = data.candidates;
+    }
+    if (data.coverUrl) {
+      await applyCoverUrl(data.coverUrl);
+    } else if (coverCandidates.value.length > 0) {
+      showCoverCandidateSelector.value = true;
+    } else {
+      alert('書影が見つかりませんでした');
+    }
+  } catch (e) {
+    console.error('Cover registration failed:', e);
+    alert('書影登録に失敗しました');
+  } finally {
+    coverLoading.value = false;
+  }
+};
+
+const selectCoverCandidate = async (candidate) => {
+  if (!candidate?.remoteUrl) return;
+  isSelectingCoverCandidate.value = true;
+  try {
+    const res = await fetch('/api/bookCrud/cover', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        title: book.value.title,
+        isbn: book.value.isbn,
+        volume: book.value.volume ?? undefined,
+        candidateUrl: candidate.remoteUrl,
+        candidateSource: candidate.source,
+      }),
+    });
+    const data = await res.json();
+    if (data.coverUrl) {
+      await applyCoverUrl(data.coverUrl);
+      showCoverCandidateSelector.value = false;
+    } else {
+      alert('候補の適用に失敗しました');
+    }
+  } catch (e) {
+    console.error('Cover candidate selection failed:', e);
+    alert('書影候補の適用に失敗しました');
+  } finally {
+    isSelectingCoverCandidate.value = false;
   }
 };
 

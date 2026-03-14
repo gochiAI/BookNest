@@ -18,7 +18,12 @@ export function getStorage(storageType: string = 'prisma'): BookStorage {
   return new StorageClass();
 }
 
-export async function validateBookData(data: any): Promise<void> {
+export async function validateBookData(
+  data: any,
+  options: { partial?: boolean } = {},
+): Promise<void> {
+  const { partial = false } = options;
+
   // PrismaBookStorageに合わせて受け取るプロパティ名を調整
   const { 
     title, 
@@ -34,27 +39,39 @@ export async function validateBookData(data: any): Promise<void> {
   } = data;
 
   // 1. タイトル (必須)
-  if (!title || typeof title !== 'string' || title.trim() === '') {
+  if (!partial && (!title || typeof title !== 'string' || title.trim() === '')) {
+    throw new Error('Title is required');
+  }
+  if (partial && title !== undefined && (typeof title !== 'string' || title.trim() === '')) {
     throw new Error('Title is required');
   }
 
   // 2. 著者 (必須: 配列かつ1人以上)
   // PrismaBookStorage.createBook では authorNames を期待しています
-  if (!authorNames || !Array.isArray(authorNames) || authorNames.length === 0) {
+  if (!partial && (!authorNames || !Array.isArray(authorNames) || authorNames.length === 0)) {
+    throw new Error('At least one author name is required');
+  }
+  if (partial && authorNames !== undefined && (!Array.isArray(authorNames) || authorNames.length === 0)) {
     throw new Error('At least one author name is required');
   }
   // 配列の中身が空文字でないかチェック
-  if (authorNames.some((name: any) => typeof name !== 'string' || name.trim() === '')) {
+  if (Array.isArray(authorNames) && authorNames.some((name: any) => typeof name !== 'string' || name.trim() === '')) {
     throw new Error('Author names cannot be empty');
   }
 
   // 3. 本の種類 (必須)
-  if (!bookType) {
+  if (!partial && !bookType) {
+    throw new Error('Book type is required');
+  }
+  if (partial && bookType !== undefined && !bookType) {
     throw new Error('Book type is required');
   }
 
   // 4. 読書ステータス (必須)
-  if (!readStatus) {
+  if (!partial && !readStatus) {
+    throw new Error('Read status is required');
+  }
+  if (partial && readStatus !== undefined && !readStatus) {
     throw new Error('Read status is required');
   }
 

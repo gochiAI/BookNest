@@ -1,4 +1,4 @@
-import type { BookStorage, GetBooksParams, GetBooksResult } from 'interfaces/BookStorage.js';
+import type { GetBooksParams, GetBooksResult } from 'interfaces/BookStorage.js';
 import { Book } from '@prisma/client';
 import fs from 'fs/promises';
 import path from 'path';
@@ -6,7 +6,7 @@ import { parse, stringify } from 'csv';
 
 const filePath = path.join(process.cwd(),'assets','storage', 'books.csv');
 
-export class CsvBookStorage implements BookStorage {
+export class CsvBookStorage {
   // Implementation of CsvBookStorage
 
   async getBooks(params: GetBooksParams): Promise<GetBooksResult> {

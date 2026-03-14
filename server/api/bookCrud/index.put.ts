@@ -15,7 +15,7 @@ export default defineEventHandler(async (event) => {
       throw new Error('Book ID is required');
     }
 
-    await validateBookData(body);
+    await validateBookData(body, { partial: true });
 
     const updatedBook = await storage.updateBook(bookId, body);
     return updatedBook;

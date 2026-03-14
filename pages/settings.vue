@@ -127,7 +127,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
-import Button from '@/components/button.vue';
+import Button from '@/components/ui/Button.vue';
 import Icon from '@/components/icons.vue';
 
 const theme = ref('light');

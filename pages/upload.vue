@@ -68,6 +68,9 @@
         <div class="flex items-center justify-between mb-4">
           <h3 class="text-lg font-semibold">読み込んだ書籍 ({{ selectedBooks.length }}冊)</h3>
           <div class="flex gap-2">
+            <Button variant="outline" size="sm" @click="handleFetchCoversForSelected">
+              選択分の書影取得
+            </Button>
             <Button variant="outline" size="sm" @click="selectAll">
               全て選択
             </Button>
@@ -124,9 +127,46 @@
               v-model="book.selected" 
               class="mt-1"
             />
+            <div class="w-14 h-20 rounded border bg-gray-100 overflow-hidden flex items-center justify-center shrink-0">
+              <img
+                v-if="book.coverUrl"
+                :src="book.coverPreviewUrl || book.coverUrl"
+                :alt="`${book.title}の書影`"
+                class="w-full h-full object-cover"
+                @error="handleCoverImageError(book)"
+              />
+              <Icon v-else name="coverup" size="18" class="text-gray-400" />
+            </div>
             <div class="flex-1">
-              <h4 class="font-medium">{{ book.title }}<span v-if="book.volume" class="text-sm text-gray-600"> Vol.{{ book.volume }}</span></h4>
+              <div class="flex items-start justify-between gap-3">
+                <h4 class="font-medium">{{ book.title }}<span v-if="book.volume" class="text-sm text-gray-600"> Vol.{{ book.volume }}</span></h4>
+                <div class="flex gap-2 shrink-0">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    @click="handleFetchCover(book)"
+                    :disabled="book.coverStatus === 'loading'"
+                  >
+                    {{ book.coverStatus === 'loading' ? '取得中...' : '書影取得' }}
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    @click="openCoverCandidateSelector(book)"
+                    :disabled="book.coverStatus === 'loading' || !book.coverCandidates || book.coverCandidates.length === 0"
+                  >
+                    候補選択
+                  </Button>
+                </div>
+              </div>
               <p class="text-sm text-gray-600">{{ book.author }}</p>
+              <p v-if="book.coverSource" class="text-xs text-gray-500 mt-1">書影ソース: {{ book.coverSource }}</p>
+              <p v-if="book.coverCandidates && book.coverCandidates.length > 0" class="text-xs text-gray-500 mt-1">
+                候補: {{ book.coverCandidates.length }}件
+                <span v-if="getCurrentCoverCandidate(book)?.matchedVolume" class="text-green-700 ml-1">（巻数一致）</span>
+              </p>
+              <p v-if="book.coverStatus === 'error'" class="text-xs text-red-600 mt-1">書影を表示できませんでした（再取得してください）</p>
+              <p v-else-if="book.coverStatus === 'loading'" class="text-xs text-blue-600 mt-1">書影を取得中...</p>
               <div v-if="book.filters && book.filters.length > 0" class="mt-1 flex flex-wrap gap-1">
                 <span
                   v-for="filter in book.filters"
@@ -197,6 +237,75 @@
           </div>
         </div>
       </div>
+
+      <!-- 書影候補選択ダイアログ -->
+      <div
+        v-if="showCoverCandidateSelector && currentCoverBook"
+        class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+        @click.self="closeCoverCandidateSelector"
+      >
+        <div class="bg-white rounded-lg shadow-xl max-w-3xl w-full mx-4 max-h-[80vh] overflow-hidden flex flex-col">
+          <div class="p-6 border-b">
+            <h3 class="text-xl font-bold">書影候補を選択してください</h3>
+            <p class="text-sm text-gray-600 mt-1">
+              {{ currentCoverBook.title }}
+              <span v-if="currentCoverBook.volume">Vol.{{ currentCoverBook.volume }}</span>
+            </p>
+          </div>
+
+          <div class="flex-1 overflow-y-auto p-6">
+            <div class="space-y-3">
+              <div
+                v-for="(candidate, index) in currentCoverBook.coverCandidates || []"
+                :key="`${candidate.remoteUrl}-${index}`"
+                class="border rounded-lg p-4 transition-colors"
+                :class="[
+                  candidate.remoteUrl === currentCoverBook.selectedCoverRemoteUrl
+                    ? 'border-blue-500 bg-blue-50'
+                    : 'hover:bg-gray-50 hover:border-blue-300 cursor-pointer'
+                ]"
+                @click="handleSelectCoverCandidate(candidate)"
+              >
+                <div class="flex items-start gap-4">
+                  <div class="w-14 h-20 rounded border bg-gray-100 overflow-hidden flex items-center justify-center shrink-0">
+                    <img
+                      :src="candidate.previewUrl || candidate.remoteUrl"
+                      :alt="candidate.title || currentCoverBook.title"
+                      class="w-full h-full object-cover"
+                    />
+                  </div>
+                  <div class="flex-1">
+                    <div class="flex items-center justify-between gap-2">
+                      <p class="font-medium text-sm">
+                        {{ candidate.title || currentCoverBook.title || 'タイトル不明' }}
+                      </p>
+                      <span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                        {{ candidate.source }}
+                      </span>
+                    </div>
+                    <p class="text-xs text-gray-600 mt-1" v-if="candidate.volume">
+                      候補巻数: Vol.{{ candidate.volume }}
+                    </p>
+                    <p class="text-xs text-gray-600 mt-1" v-if="candidate.isbn">
+                      ISBN: {{ candidate.isbn }}
+                    </p>
+                    <p v-if="candidate.matchedVolume" class="text-xs text-green-700 mt-1">巻数一致候補</p>
+                    <p v-if="candidate.remoteUrl === currentCoverBook.selectedCoverRemoteUrl" class="text-xs text-blue-700 mt-1">
+                      現在選択中
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="p-6 border-t bg-gray-50 flex justify-end gap-2">
+            <Button variant="outline" :disabled="isCoverCandidateApplying" @click="closeCoverCandidateSelector">
+              閉じる
+            </Button>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -221,12 +330,18 @@ const {
   availableFilters,
   selectedFilters,
   toggleFilter,
-  getFilteredBooks
+  getFilteredBooks,
+  fetchCoverForBook,
+  fetchCoversForSelected,
+  selectCoverCandidateForBook
 } = useBookUpload();
 const fileInput = ref(null);
 
 const searchTitle = ref('');
 const sortOption = ref('title-asc');
+const showCoverCandidateSelector = ref(false);
+const coverCandidateBookId = ref(null);
+const isCoverCandidateApplying = ref(false);
 
 const filteredAndSortedBooks = computed(() => {
   let books = getFilteredBooks();
@@ -253,6 +368,11 @@ const filteredAndSortedBooks = computed(() => {
   return books;
 });
 
+const currentCoverBook = computed(() => {
+  if (coverCandidateBookId.value === null) return null;
+  return selectedBooks.value.find(book => book.id === coverCandidateBookId.value) || null;
+});
+
 const handleFileUpload = (event) => {
   const file = event.target.files[0];
   if (file) {
@@ -273,6 +393,45 @@ const clearBooks = () => {
   if (fileInput.value) {
     fileInput.value.value = '';
   }
+};
+
+const handleFetchCover = async (book) => {
+  await fetchCoverForBook(book, book.coverStatus === 'error');
+};
+
+const handleFetchCoversForSelected = async () => {
+  await fetchCoversForSelected();
+};
+
+const handleCoverImageError = (book) => {
+  book.coverStatus = 'error';
+};
+
+const getCurrentCoverCandidate = (book) => {
+  if (!book?.coverCandidates || !book.selectedCoverRemoteUrl) return null;
+  return book.coverCandidates.find(candidate => candidate.remoteUrl === book.selectedCoverRemoteUrl) || null;
+};
+
+const openCoverCandidateSelector = (book) => {
+  if (!book?.coverCandidates || book.coverCandidates.length === 0) return;
+  coverCandidateBookId.value = book.id;
+  showCoverCandidateSelector.value = true;
+};
+
+const closeCoverCandidateSelector = () => {
+  if (isCoverCandidateApplying.value) return;
+  showCoverCandidateSelector.value = false;
+  coverCandidateBookId.value = null;
+};
+
+const handleSelectCoverCandidate = async (candidate) => {
+  const targetBook = currentCoverBook.value;
+  if (!targetBook) return;
+
+  isCoverCandidateApplying.value = true;
+  await selectCoverCandidateForBook(targetBook, candidate, targetBook.coverStatus === 'error');
+  isCoverCandidateApplying.value = false;
+  closeCoverCandidateSelector();
 };
 
 const handleRegister = async () => {

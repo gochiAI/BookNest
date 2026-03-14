@@ -14,6 +14,10 @@ export default defineEventHandler(async (event) => {
       throw new Error('Book ID is required');
     }
 
+    if (!storage.getBookById) {
+      throw new Error('getBookById is not implemented for this storage');
+    }
+
     // 書籍情報を取得
     const book = await storage.getBookById(bookId);
 

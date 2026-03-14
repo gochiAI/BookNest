@@ -1,9 +1,9 @@
-import type { BookStorage, GetBooksParams, GetBooksResult } from 'interfaces/BookStorage.js';
+import type { GetBooksParams, GetBooksResult } from 'interfaces/BookStorage.js';
 import { Book } from '@prisma/client';
 import fs from 'fs/promises';
 import path from 'path';
 
-export class JsonBookStorage implements BookStorage {
+export class JsonBookStorage {
   // Implementation of JsonBookStorage
 
   async getBooks(params: GetBooksParams): Promise<GetBooksResult> {

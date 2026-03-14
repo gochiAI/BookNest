@@ -1,5 +1,5 @@
 // storage/MongoBookStorage.ts
-import type { BookStorage, GetBooksParams, GetBooksResult } from 'interfaces/BookStorage.js';
+import type { GetBooksParams, GetBooksResult } from 'interfaces/BookStorage.js';
 import { Book } from '@prisma/client';
 import { MongoClient, ObjectId } from 'mongodb';
 
@@ -8,7 +8,7 @@ const client = new MongoClient(uri);
 const dbName = 'bookstore';
 const collectionName = 'books';
 
-export class MongoBookStorage implements BookStorage {
+export class MongoBookStorage {
   // Implementation of MongoBookStorage
 
   async getBooks(params: GetBooksParams): Promise<GetBooksResult> {

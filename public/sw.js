@@ -1,12 +1,8 @@
-// public/sw.js
-const CACHE_NAME = 'book-store-cache-v1';
+const CACHE_NAME = 'book-store-cache-v2';
 const urlsToCache = [
   '/',
-  '/index.html',
-  '/manifest.json',
   '/favicon.ico',
   '/assets/css/topToast.css',
-  // 必要な他のリソースを追加
 ];
 
 self.addEventListener('install', (event) => {
@@ -18,18 +14,33 @@ self.addEventListener('install', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
+  const request = event.request;
+  const url = new URL(request.url);
+
+  if (request.method !== 'GET') {
+    return;
+  }
+
+  if (url.origin !== self.location.origin) {
+    return;
+  }
+
+  if (url.pathname.startsWith('/api/') || url.pathname.startsWith('/.well-known/')) {
+    return;
+  }
+
   event.respondWith(
-    caches.match(event.request).then((response) => {
+    caches.match(request).then((response) => {
       if (response) {
         return response;
       }
-      return fetch(event.request).then((response) => {
+      return fetch(request).then((response) => {
         if (!response || response.status !== 200 || response.type !== 'basic') {
           return response;
         }
         const responseToCache = response.clone();
         caches.open(CACHE_NAME).then((cache) => {
-          cache.put(event.request, responseToCache);
+          cache.put(request, responseToCache);
         });
         return response;
       });

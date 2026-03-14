@@ -69,6 +69,14 @@
           @click="closeSidebar"
         />
 
+        <!-- 不足情報本リスト -->
+        <SidebarLink
+          to="/incomplete"
+          :icon="'alert'"
+          label="不足情報"
+          @click="closeSidebar"
+        />
+
         <!-- 区切り線 -->
         <div class="my-4 border-t" />
 

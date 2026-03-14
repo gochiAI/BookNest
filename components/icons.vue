@@ -79,6 +79,7 @@ const icons = {
   book: Book,
   users: Users,
   building2: Building2,
+  alert: HelpCircle, // 不足情報用
 };
 
 /**

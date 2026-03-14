@@ -69,6 +69,65 @@
         />
       </div>
       <div>
+        <label class="text-sm font-medium leading-none">Cover</label>
+        <div class="mt-2 flex items-start gap-4">
+          <div class="w-24 h-32 rounded border bg-gray-100 overflow-hidden flex items-center justify-center shrink-0">
+            <img
+              v-if="currentCoverUrl"
+              :src="currentCoverUrl"
+              :alt="`${title || 'book'}の書影`"
+              class="w-full h-full object-cover"
+              @error="handleCoverImageError"
+            />
+            <span v-else class="text-xs text-gray-500">No Cover</span>
+          </div>
+          <div class="flex-1 space-y-2">
+            <div class="flex flex-wrap gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                :disabled="coverStatus === 'loading'"
+                @click="fetchCover"
+              >
+                {{ coverStatus === "loading" ? "取得中..." : "書影を取得" }}
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                :disabled="coverStatus === 'loading' || coverCandidates.length === 0"
+                @click="openCoverCandidateSelector"
+              >
+                候補選択
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                :disabled="!coverUrl && !coverPreviewUrl"
+                @click="clearCover"
+              >
+                クリア
+              </Button>
+            </div>
+            <p v-if="coverUrl" class="text-xs text-gray-500 break-all">
+              保存先: {{ coverUrl }}
+            </p>
+            <p v-if="coverCandidates.length > 0" class="text-xs text-gray-500">
+              候補: {{ coverCandidates.length }}件
+              <span v-if="currentCoverCandidate?.matchedVolume" class="text-green-700 ml-1">（巻数一致）</span>
+            </p>
+            <p v-if="coverStatus === 'error'" class="text-xs text-red-600">
+              書影の取得または表示に失敗しました。
+            </p>
+            <p v-else-if="coverStatus === 'loading'" class="text-xs text-blue-600">
+              書影を取得中...
+            </p>
+            <p v-else-if="coverSource" class="text-xs text-gray-500">
+              書影ソース: {{ coverSource }}
+            </p>
+          </div>
+        </div>
+      </div>
+      <div>
         <label for="releaseDate" class="text-sm font-medium leading-none">Release Date
           <span v-if="isRequired('releaseDate')" class="text-red-500 ml-1">*</span>
         </label>
@@ -127,6 +186,64 @@
         </Button>
       </div>
     </form>
+
+    <div
+      v-if="showCoverCandidateSelector"
+      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+      @click.self="closeCoverCandidateSelector"
+    >
+      <div class="bg-white rounded-lg shadow-xl max-w-3xl w-full mx-4 max-h-[80vh] overflow-hidden flex flex-col">
+        <div class="p-6 border-b">
+          <h3 class="text-xl font-bold">書影候補を選択してください</h3>
+          <p class="text-sm text-gray-600 mt-1">
+            {{ title }}
+            <span v-if="volume">Vol.{{ volume }}</span>
+          </p>
+        </div>
+
+        <div class="flex-1 overflow-y-auto p-6">
+          <div class="space-y-3">
+            <div
+              v-for="(candidate, index) in coverCandidates"
+              :key="`${candidate.remoteUrl}-${index}`"
+              class="border rounded-lg p-4 transition-colors"
+              :class="[
+                candidate.remoteUrl === selectedCoverRemoteUrl
+                  ? 'border-blue-500 bg-blue-50'
+                  : 'hover:bg-gray-50 hover:border-blue-300 cursor-pointer'
+              ]"
+              @click="selectCoverCandidate(candidate)"
+            >
+              <div class="flex items-start gap-4">
+                <div class="w-14 h-20 rounded border bg-gray-100 overflow-hidden flex items-center justify-center shrink-0">
+                  <img
+                    :src="candidate.previewUrl || candidate.remoteUrl"
+                    :alt="candidate.title || title"
+                    class="w-full h-full object-cover"
+                  />
+                </div>
+                <div class="flex-1">
+                  <div class="flex items-center justify-between gap-2">
+                    <p class="font-medium text-sm">{{ candidate.title || title || 'タイトル不明' }}</p>
+                    <span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">{{ candidate.source }}</span>
+                  </div>
+                  <p v-if="candidate.volume" class="text-xs text-gray-600 mt-1">候補巻数: Vol.{{ candidate.volume }}</p>
+                  <p v-if="candidate.isbn" class="text-xs text-gray-600 mt-1">ISBN: {{ candidate.isbn }}</p>
+                  <p v-if="candidate.matchedVolume" class="text-xs text-green-700 mt-1">巻数一致候補</p>
+                  <p v-if="candidate.remoteUrl === selectedCoverRemoteUrl" class="text-xs text-blue-700 mt-1">現在選択中</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="p-6 border-t bg-gray-50 flex justify-end gap-2">
+          <Button type="button" variant="outline" :disabled="isSelectingCoverCandidate" @click="closeCoverCandidateSelector">
+            閉じる
+          </Button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -156,10 +273,22 @@ export default {
     const readStatus = ref("");
     const bookType = ref("");
     const volume = ref(null);
+    const coverUrl = ref("");
+    const coverPreviewUrl = ref("");
+    const coverSource = ref("");
+    const coverStatus = ref("");
+    const coverCandidates = ref([]);
+    const selectedCoverRemoteUrl = ref("");
+    const showCoverCandidateSelector = ref(false);
+    const isSelectingCoverCandidate = ref(false);
     const isEditMode = ref(false); // 編集モードかどうかを判定
     const customization = ref(null);
     const requiredOnCreate = computed(() => customization.value?.registration?.requiredOnCreate || []);
     const isRequired = (key) => requiredOnCreate.value.includes(key);
+    const currentCoverUrl = computed(() => coverPreviewUrl.value || coverUrl.value);
+    const currentCoverCandidate = computed(() =>
+      coverCandidates.value.find(candidate => candidate.remoteUrl === selectedCoverRemoteUrl.value),
+    );
 
     const isValidRequired = computed(() => {
       // Map UI fields to config keys
@@ -258,6 +387,141 @@ export default {
       seriesOptions.value = data.series;
     };
 
+    const normalizeIsbn = (value) => (value || "").replace(/\D/g, "");
+
+    const applyCoverResponse = (data) => {
+      if (Array.isArray(data?.candidates) && data.candidates.length > 0) {
+        coverCandidates.value = data.candidates;
+      }
+
+      if (data?.coverUrl) {
+        coverUrl.value = data.coverUrl;
+        coverPreviewUrl.value = `${data.coverUrl}${data.coverUrl.includes("?") ? "&" : "?"}t=${Date.now()}`;
+        coverSource.value = data.source || "";
+        selectedCoverRemoteUrl.value = data.remoteUrl || "";
+        coverStatus.value = "done";
+        return true;
+      }
+
+      coverPreviewUrl.value = "";
+      coverStatus.value = "error";
+      return false;
+    };
+
+    const fetchCover = async () => {
+      const normalizedIsbn = normalizeIsbn(isbn.value);
+      const normalizedTitle = (title.value || "").trim();
+      if (!normalizedIsbn && !normalizedTitle) {
+        alert("ISBNまたはタイトルを入力してください");
+        return;
+      }
+
+      const shouldForce = coverStatus.value === "error";
+      coverStatus.value = "loading";
+      try {
+        const response = await fetch("/api/bookCrud/cover", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            isbn: normalizedIsbn || undefined,
+            title: normalizedTitle || undefined,
+            volume: volume.value ?? undefined,
+            force: shouldForce,
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch cover image");
+        }
+
+        const data = await response.json();
+        if (!applyCoverResponse(data)) {
+          coverSource.value = "";
+          if ((data?.candidates?.length || 0) > 0) {
+            alert("候補は見つかりました。候補選択から選んでください。");
+          } else {
+            alert("書影が見つかりませんでした");
+          }
+        }
+      } catch (error) {
+        coverPreviewUrl.value = "";
+        coverSource.value = "";
+        coverStatus.value = "error";
+        console.error("書影の取得中にエラーが発生しました:", error);
+        alert("書影の取得に失敗しました");
+      }
+    };
+
+    const openCoverCandidateSelector = () => {
+      if (coverCandidates.value.length === 0) return;
+      showCoverCandidateSelector.value = true;
+    };
+
+    const closeCoverCandidateSelector = () => {
+      if (isSelectingCoverCandidate.value) return;
+      showCoverCandidateSelector.value = false;
+    };
+
+    const selectCoverCandidate = async (candidate) => {
+      if (!candidate?.remoteUrl) return;
+
+      const normalizedIsbn = normalizeIsbn(isbn.value);
+      const normalizedTitle = (title.value || "").trim();
+      const shouldForce = coverStatus.value === "error";
+
+      isSelectingCoverCandidate.value = true;
+      coverStatus.value = "loading";
+
+      try {
+        const response = await fetch("/api/bookCrud/cover", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            isbn: normalizedIsbn || undefined,
+            title: normalizedTitle || undefined,
+            volume: volume.value ?? undefined,
+            candidateUrl: candidate.remoteUrl,
+            candidateSource: candidate.source,
+            force: shouldForce,
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to apply cover candidate");
+        }
+
+        const data = await response.json();
+        if (!applyCoverResponse(data)) {
+          alert("候補の適用に失敗しました");
+        } else {
+          selectedCoverRemoteUrl.value = candidate.remoteUrl;
+          showCoverCandidateSelector.value = false;
+        }
+      } catch (error) {
+        coverStatus.value = "error";
+        coverPreviewUrl.value = "";
+        console.error("書影候補の適用中にエラーが発生しました:", error);
+        alert("書影候補の適用に失敗しました");
+      } finally {
+        isSelectingCoverCandidate.value = false;
+      }
+    };
+
+    const clearCover = () => {
+      coverUrl.value = "";
+      coverPreviewUrl.value = "";
+      coverSource.value = "";
+      coverStatus.value = "";
+      coverCandidates.value = [];
+      selectedCoverRemoteUrl.value = "";
+      showCoverCandidateSelector.value = false;
+    };
+
+    const handleCoverImageError = () => {
+      coverPreviewUrl.value = "";
+      coverStatus.value = "error";
+    };
+
     // 日付を yyyy-MM-dd フォーマットに変換する関数
     const formatDate = (isoDate) => {
       const date = new Date(isoDate);
@@ -299,6 +563,12 @@ export default {
           readStatus.value = book.readStatus;
           bookType.value = book.bookType;
           volume.value = book.volume ?? null;
+          coverUrl.value = book.coverUrl || "";
+          coverPreviewUrl.value = "";
+          coverSource.value = "";
+          coverStatus.value = book.coverUrl ? "done" : "";
+          coverCandidates.value = [];
+          selectedCoverRemoteUrl.value = "";
         } catch (error) {
           console.error("書籍データの取得中にエラーが発生しました:", error);
         }
@@ -321,6 +591,7 @@ export default {
         readStatus: readStatus.value || "Unread",
         bookType: bookType.value || "General",
         volume: volume.value ?? null,
+        coverUrl: coverUrl.value || undefined,
       };
 
       try {
@@ -366,6 +637,16 @@ export default {
       readStatus,
       bookType,
       volume,
+      coverUrl,
+      coverPreviewUrl,
+      coverSource,
+      coverStatus,
+      coverCandidates,
+      selectedCoverRemoteUrl,
+      showCoverCandidateSelector,
+      isSelectingCoverCandidate,
+      currentCoverUrl,
+      currentCoverCandidate,
       bookTypeOptions,
       readStatusOptions,
       authorOptions,
@@ -382,6 +663,12 @@ export default {
       handleAuthorInput,
       handlePublisherInput,
       handleSeriesInput,
+      fetchCover,
+      openCoverCandidateSelector,
+      closeCoverCandidateSelector,
+      selectCoverCandidate,
+      clearCover,
+      handleCoverImageError,
     };
   },
 };
