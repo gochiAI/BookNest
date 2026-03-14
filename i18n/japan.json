@@ -22,5 +22,34 @@
       "Other": "その他"
     },
     "searchPlaceHolder": "タイトル、著者、シリーズ名で検索"
+  },
+  "RegisterBook": {
+    "registerBook": "書籍登録",
+    "title": "タイトル",
+    "author": "著者",
+    "series": "シリーズ",
+    "volume": "巻数",
+    "readStatus": "読書状況",
+    "bookType": "書籍タイプ",
+    "register": "登録",
+    "cancel": "キャンセル",
+    "validation": {
+      "required": "必須項目です",
+      "maxLength": "最大文字数を超えています"
+    }
+  },
+  "Messages": {
+    "updateSuccess": "更新に成功しました",
+    "updateError": "更新中にエラーが発生しました",
+    "themeUpdated": "テーマが正常に更新されました",
+    "storageTypeUpdated": "ストレージタイプが正常に更新されました",
+    "languageUpdated": "言語が正常に更新されました"
+  },
+  "Settings": {
+    "title": "設定",
+    "language": "言語を選択",
+    "storageType": "ストレージタイプを選択",
+    "theme": "テーマを選択",
+    "close": "閉じる"
   }
 }

@@ -1,8 +1,38 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   compatibilityDate: '2024-04-03',
-  devtools: { enabled: true },
-  modules: ['@nuxtjs/tailwindcss', '@nuxtjs/i18n','@vueuse/nuxt'],
+  devtools: {
+    enabled: true,
+    timeline: {
+      enabled: true,
+    },
+  },
+  css: [
+    '@/assets/css/topToast.css',
+    '~/assets/css/theme.css', // カスタムテーマスタイルを追加
+  ],
+  plugins:[
+    {
+      src: "plugins/toast.client.js",
+      mode: "client",
+    },
+    {
+      src: "plugins/sw.client.js",
+      mode: "client",
+    },
+    {
+      src:"plugins/indexedDB.ts",
+      mode: "client"
+    }
+
+  ],
+  modules: [
+    '@nuxtjs/tailwindcss',
+    '@nuxtjs/i18n',
+    '@vueuse/nuxt',
+    '@nuxtjs/device',
+    '@nuxt/devtools',
+  ],
   i18n: {
     locales: [
       { code: 'en', iso: 'en-US', file: 'english.json' },

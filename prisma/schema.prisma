@@ -1,0 +1,151 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Book {
+  id           String    @id @default(uuid())
+  title        String
+  releaseDate  DateTime?
+  coverUrl     String?
+  
+  volume       Int?
+  volumeSuffix String?
+  
+  isbn         String?   @unique
+  bookType     BookType  @default(General)
+  readStatus   ReadStatus @default(Unread)
+
+  publisherId  String?
+  seriesId     String?
+  
+  // レビュー・評価フィールド
+  rating       Int?      // 1-5の評価
+  reviewComment String?  // レビューコメント
+  completedDate DateTime? // 読了日
+  
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  // リレーション
+  authors      BookAuthor[]
+  
+  publisher    Publisher? @relation(fields: [publisherId], references: [id], onDelete: Cascade)
+  series       Series?    @relation(fields: [seriesId], references: [id], onDelete: Cascade)
+  
+  collections  BookCollection[]
+  tags         BookTag[]
+
+  @@unique([title, volume, volumeSuffix], name: "unique_book_entry")
+  
+  // 検索・ソート用インデックス
+  @@index([title, volume, volumeSuffix])
+  @@index([bookType, readStatus])
+  @@index([releaseDate, id])
+  @@index([publisherId])
+  @@index([seriesId])
+  @@index([createdAt])
+  @@map("books")
+}
+
+model BookAuthor {
+  bookId   String
+  authorId String
+  role     String?  @default("Author") 
+   
+  book     Book   @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  author   Author @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@id([bookId, authorId])
+  @@index([authorId])
+  @@map("book_authors")
+}
+
+model Author {
+  id    String @id @default(uuid())
+  name  String @unique
+  books BookAuthor[]
+
+  @@index([name])
+  @@map("authors")
+}
+
+model Publisher {
+  id    String @id @default(uuid())
+  name  String @unique
+  books Book[]
+
+  @@index([name])
+  @@map("publishers")
+}
+
+model Series {
+  id    String @id @default(uuid())
+  name  String @unique
+  books Book[]
+
+  @@map("series")
+}
+
+model Collection {
+  id          String           @id @default(uuid())
+  name        String           @unique
+  description String?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  books       BookCollection[]
+
+  @@index([name])
+  @@map("collections")
+}
+
+model Tag {
+  id        String    @id @default(uuid())
+  name      String    @unique
+  createdAt DateTime  @default(now())
+  books     BookTag[]
+
+  @@index([name])
+  @@map("tags")
+}
+
+model BookCollection {
+  bookId       String
+  collectionId String
+  addedAt      DateTime   @default(now())
+  book         Book       @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  collection   Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+
+  @@id([bookId, collectionId])
+  @@index([collectionId])
+  @@map("book_collections")
+}
+
+model BookTag {
+  bookId  String
+  tagId   String
+  addedAt DateTime @default(now())
+  book    Book     @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  tag     Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([bookId, tagId])
+  @@index([tagId])
+  @@map("book_tags")
+}
+
+enum BookType {
+  General
+  Manga
+  LightNovel
+  Other
+}
+
+enum ReadStatus {
+  Unread
+  Completed
+  Reading
+}

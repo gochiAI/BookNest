@@ -1,6 +1,26 @@
-# Nuxt Minimal Starter
+# Book Nest
+このプロジェクトは、書籍の管理を行うためのNuxtアプリケーションです。
 
-Look at the [Nuxt documentation](https://nuxt.com/docs/getting-started/introduction) to learn more.
+## 主なディレクトリとファイル
+
+- `components/`: Vueコンポーネントを格納
+- `config/`: 設定ファイルを格納
+- `constants/`: 定数を格納
+- `i18n/`: 国際化対応のためのファイルを格納
+- `interfaces/`: TypeScriptのインターフェースを格納
+- `layouts/`: レイアウトコンポーネントを格納
+- `pages/`: ページコンポーネントを格納
+- `prisma/`: Prismaの設定とマイグレーションファイルを格納
+- `server/`: サーバーサイドのコードを格納
+- `nuxt.config.ts`: Nuxtの設定ファイル
+- `tailwind.config.js`: Tailwind CSSの設定ファイル
+
+## Document
+- [components](./docs/components.md)
+- [layouts](./docs/layouts.md)
+- [api](./docs/api.md)
+
+
 
 ## Setup
 

@@ -22,5 +22,19 @@
       "Other": "Other"
     },
     "searchPlaceHolder": "Search by title, author, series"
+  },
+  "Messages": {
+    "updateSuccess": "Update successful",
+    "updateError": "Error updating",
+    "themeUpdated": "Theme updated successfully",
+    "storageTypeUpdated": "Storage type updated successfully",
+    "languageUpdated": "Language updated successfully"
+  },
+  "Settings": {
+    "title": "Settings",
+    "language": "Select Language",
+    "storageType": "Select Storage Type",
+    "theme": "Select Theme",
+    "close": "Close"
   }
 }
